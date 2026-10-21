@@ -173,11 +173,36 @@ def main() -> None:
     warning.add_argument("--samples", type=int, default=4000)
     warning.add_argument("--seed", type=int, default=42)
     warning.add_argument("--epochs", type=int, default=40)
+    risk = commands.add_parser("risk-experiment", help="Causal risk-aware selection")
+    risk.add_argument("--output", type=Path, default=Path("artifacts/risk-42"))
+    risk.add_argument("--samples", type=int, default=4000)
+    risk.add_argument("--seed", type=int, default=42)
+    risk.add_argument("--epochs", type=int, default=40)
+    risk.add_argument(
+        "--scenario", choices=["normal", "shared-stress"], default="normal"
+    )
+    risk.add_argument("--violation-penalty-ms", type=float, default=100.0)
+    risk.add_argument("--switching-cost-ms", type=float, default=3.0)
+    risk.add_argument("--hysteresis-ms", type=float, default=3.0)
+    risk.add_argument("--min-hold-samples", type=int, default=5)
     args = parser.parse_args()
     try:
         if args.command == "generate":
             write_telemetry(args.output, generate_telemetry(args.samples, args.seed))
             print(f"Synthetic telemetry: {args.output}")
+        elif args.command == "risk-experiment":
+            from quantum_link_optimizer.risk import RiskConfig, run_risk
+
+            config = RiskConfig(
+                args.violation_penalty_ms,
+                args.switching_cost_ms,
+                args.hysteresis_ms,
+                args.min_hold_samples,
+            )
+            report = run_risk(
+                args.output, args.samples, args.seed, args.epochs, args.scenario, config
+            )
+            print(json.dumps(report, indent=2))
         elif args.command == "warning-experiment":
             from quantum_link_optimizer.warning import run_warning
 
