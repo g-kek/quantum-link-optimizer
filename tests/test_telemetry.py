@@ -13,6 +13,7 @@ def test_simulator_deterministic():
     a = generate_telemetry(300, 17)
     np.testing.assert_array_equal(a, generate_telemetry(300, 17))
     assert not np.array_equal(a, generate_telemetry(300, 18))
+    np.testing.assert_array_equal(a[:100], generate_telemetry(100, 17))
     assert a.shape == (300, 2)
     assert np.isfinite(a).all() and (a > 0).all()
 
