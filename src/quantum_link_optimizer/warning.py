@@ -2,6 +2,7 @@
 
 import copy
 import csv
+import hashlib
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -207,6 +208,9 @@ def run_warning(output: Path, samples=4000, seed=42, epochs=40, values=None):
     output.mkdir(parents=True, exist_ok=True)
     write_telemetry(output / "telemetry.csv", values)
     checkpoint = {
+        "fit_prefix_sha256": hashlib.sha256(
+            np.ascontiguousarray(values[: data.val_end]).tobytes()
+        ).hexdigest(),
         "state_dict": model.state_dict(),
         "window": data.x.shape[1],
         "horizons": list(data.horizons),

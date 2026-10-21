@@ -108,6 +108,9 @@ def run_risk(
     values = synthetic_scenario(samples, seed, scenario)
     run_warning(output, samples, seed, epochs, values=values)
     model, checkpoint = load_warning(output / "warning-model.pt")
+    checkpoint["risk_configuration"] = asdict(config)
+    checkpoint["scenario"] = scenario
+    torch.save(checkpoint, output / "warning-model.pt")
     indices = np.arange(checkpoint["val_end"], len(values))
     mean, scale = np.array(checkpoint["mean"]), np.array(checkpoint["scale"])
     window = checkpoint["window"]

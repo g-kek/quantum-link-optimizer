@@ -43,9 +43,11 @@ uv run quantum-link experiment --input data/demo.csv --output artifacts/from-csv
 При `--input` число строк берётся из CSV, а `--seed` задаёт инициализацию
 модели. Доступны также `--samples`, `--window`, `--epochs`, `--sla-ms` и
 `--switching-cost-ms`; полный список — `uv run quantum-link experiment --help`.
-В этой версии импорт произвольной внешней телеметрии намеренно не реализован:
-чтение принимает только описанный ниже синтетический формат. Реальные данные
-нельзя переименовать в синтетические ради совместимости.
+Команда `experiment --input` принимает только синтетический формат ниже.
+Для внешней телеметрии предусмотрен отдельный `shadow-replay --telemetry-input`
+с явным `--allow-domain-shift`; он не переобучает модель и не доказывает её
+пригодность для реальной сети. Реальные данные нельзя переименовать в
+синтетические ради совместимости.
 
 ## Данные и источники
 
@@ -200,6 +202,25 @@ SLA в реальной сети. Для исследования нужны н�
 селектор по вероятности SLA и прогнозу RTT с фиксированными путями и предыдущим
 RTT. [Описание](docs/risk-selection.md) фиксирует целевую функцию, стоимость,
 гистерезис, минимальное удержание и сценарии. Настройки не подбираются на тесте.
+
+## Shadow replay и набор проверок
+
+Ветка `feat/shadow-replay` добавляет воспроизведение с фиксированной моделью:
+решение записывается до потребления текущего исхода; действий в сети нет.
+
+```bash
+uv run quantum-link shadow-replay --model artifacts/risk-42/warning-model.pt --synthetic-input artifacts/risk-42/telemetry.csv --output artifacts/replay-42
+uv run quantum-link benchmark-suite --seeds 41 42 43 --epochs 40 --output artifacts/shadow-suite
+uv run quantum-link atlas-benchmark --input artifacts/realism-audit/atlas-1001-probe-10001.json --output artifacts/shadow-atlas
+```
+
+[Протокол shadow/benchmark](docs/shadow-replay.md) описывает внешнюю CSV-схему,
+provenance, abstention при пропусках, журнал decision/evaluation и результаты
+шести проверенных запусков. Во всех шести risk-selector уступил previous-RTT
+по среднему RTT и сырой доле нарушений. Atlas оценивается отдельно как один
+реальный путь: он не превращается в два канала и не подтверждает целевое SLA.
+Горизонты предупреждений остаются измерениями, а не секундами; внешние данные
+не ресемплируются и требуют явного признания непроверенного domain shift.
 
 ## Ограничения применения
 

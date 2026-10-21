@@ -185,11 +185,56 @@ def main() -> None:
     risk.add_argument("--switching-cost-ms", type=float, default=3.0)
     risk.add_argument("--hysteresis-ms", type=float, default=3.0)
     risk.add_argument("--min-hold-samples", type=int, default=5)
+    shadow = commands.add_parser(
+        "shadow-replay", help="Offline decisions before outcomes"
+    )
+    shadow.add_argument("--model", type=Path, required=True)
+    inputs = shadow.add_mutually_exclusive_group(required=True)
+    inputs.add_argument("--synthetic-input", type=Path)
+    inputs.add_argument("--telemetry-input", type=Path)
+    shadow.add_argument("--output", type=Path, required=True)
+    shadow.add_argument("--start-sample", type=int)
+    shadow.add_argument("--max-gap-seconds", type=float, default=2.0)
+    shadow.add_argument("--allow-domain-shift", action="store_true")
+    atlas = commands.add_parser(
+        "atlas-benchmark", help="Local single-path Atlas baseline"
+    )
+    atlas.add_argument("--input", type=Path, required=True)
+    atlas.add_argument("--output", type=Path, required=True)
+    suite = commands.add_parser(
+        "benchmark-suite", help="Predeclared multi-seed shadow suite"
+    )
+    suite.add_argument("--output", type=Path, required=True)
+    suite.add_argument("--seeds", type=int, nargs="+", default=[41, 42, 43])
+    suite.add_argument("--samples", type=int, default=4000)
+    suite.add_argument("--epochs", type=int, default=40)
     args = parser.parse_args()
     try:
         if args.command == "generate":
             write_telemetry(args.output, generate_telemetry(args.samples, args.seed))
             print(f"Synthetic telemetry: {args.output}")
+        elif args.command == "shadow-replay":
+            from quantum_link_optimizer.shadow import run_shadow
+
+            report = run_shadow(
+                args.model,
+                args.telemetry_input or args.synthetic_input,
+                args.output,
+                external=args.telemetry_input is not None,
+                allow_domain_shift=args.allow_domain_shift,
+                start_sample=args.start_sample,
+                max_gap_seconds=args.max_gap_seconds,
+            )
+            print(json.dumps(report, indent=2))
+        elif args.command == "benchmark-suite":
+            from quantum_link_optimizer.suite import run_suite
+
+            report = run_suite(args.output, args.seeds, args.samples, args.epochs)
+            print(json.dumps(report, indent=2, allow_nan=False))
+        elif args.command == "atlas-benchmark":
+            from quantum_link_optimizer.atlas import atlas_benchmark
+
+            print(json.dumps(atlas_benchmark(args.input, args.output), indent=2))
         elif args.command == "risk-experiment":
             from quantum_link_optimizer.risk import RiskConfig, run_risk
 
