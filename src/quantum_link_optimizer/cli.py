@@ -166,11 +166,27 @@ def main() -> None:
     experiment.add_argument("--epochs", type=int, default=60)
     experiment.add_argument("--switching-cost-ms", type=float, default=3.0)
     experiment.add_argument("--sla-ms", type=float, default=100.0)
+    warning = commands.add_parser(
+        "warning-experiment", help="Purged multihorizon warning"
+    )
+    warning.add_argument("--output", type=Path, default=Path("artifacts/warning-42"))
+    warning.add_argument("--samples", type=int, default=4000)
+    warning.add_argument("--seed", type=int, default=42)
+    warning.add_argument("--epochs", type=int, default=40)
     args = parser.parse_args()
     try:
         if args.command == "generate":
             write_telemetry(args.output, generate_telemetry(args.samples, args.seed))
             print(f"Synthetic telemetry: {args.output}")
+        elif args.command == "warning-experiment":
+            from quantum_link_optimizer.warning import run_warning
+
+            report = run_warning(args.output, args.samples, args.seed, args.epochs)
+            print(
+                json.dumps(
+                    {k: v for k, v in report.items() if k != "training"}, indent=2
+                )
+            )
         else:
             report = run_experiment(
                 args.output,
