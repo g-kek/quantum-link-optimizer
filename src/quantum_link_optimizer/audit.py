@@ -163,7 +163,7 @@ def run_audit(
             smoothed = None
     report = {
         "kind": "ping_audit",
-        "title": "Анализ ping RTT · Москва — Краснодар",
+        "title": "Анализ ping RTT двух путей",
         "source_label": "Внешние измерения · происхождение указано в CSV",
         "runtime": runtime_metadata(),
         "input_sha256": hashlib.sha256(input_path.read_bytes()).hexdigest(),

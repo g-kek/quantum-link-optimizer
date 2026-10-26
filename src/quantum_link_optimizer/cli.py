@@ -151,7 +151,9 @@ def run_experiment(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Offline synthetic RTT experiment")
+    parser = argparse.ArgumentParser(
+        description="Offline two-path RTT analysis and replay"
+    )
     commands = parser.add_subparsers(dest="command", required=True)
     generate = commands.add_parser("generate", help="Write labeled synthetic CSV")
     generate.add_argument("--output", type=Path, required=True)
