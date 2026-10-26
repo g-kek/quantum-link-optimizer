@@ -542,7 +542,7 @@
               <div>
                 <div class="small">Граница доступной информации</div>
                 <strong id="cutoff"></strong>
-                <div class="small">
+                <div class="small" id="cutoff-note">
                   Решение не использует исход текущего шага
                 </div>
               </div>
@@ -796,6 +796,9 @@
               : `${fmt(p.rtt[choice])} мс`;
         $("timestamp").textContent = p.timestamp;
         $("cutoff").textContent = String(p.information_cutoff);
+        $("cutoff-note").textContent = policy.includes("oracle")
+          ? "Oracle использует текущий исход и служит только ориентиром"
+          : "Решение не использует исход текущего шага";
         $("step").textContent = `${cursor + 1} / ${data.points.length}`;
         if (policy.includes("oracle"))
           $("cutoff").textContent = "Текущие исходы · только оценка";
