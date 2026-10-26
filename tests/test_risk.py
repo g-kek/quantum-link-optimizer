@@ -4,6 +4,8 @@ import pytest
 from quantum_link_optimizer.risk import (
     RiskConfig,
     RiskSelector,
+    causal_ewma,
+    point_choices,
     risk_choices,
     run_risk,
 )
@@ -48,3 +50,17 @@ def test_risk_artifacts_and_full_test(tmp_path):
     bound = report["both_paths_bad_rate_lower_bound"]
     for policy in report["policies"].values():
         assert policy["sla_violation_rate"] >= bound
+
+
+def test_point_baselines_obey_same_dwell_and_do_not_read_future():
+    config = RiskConfig(min_hold_samples=3)
+    values = np.array([[50.0, 60.0], [90.0, 30.0], [90.0, 30.0], [90.0, 30.0]])
+    choices = point_choices(np.arange(4), values, config)
+    np.testing.assert_array_equal(choices, [0, 0, 0, 1])
+    values = np.arange(40, dtype=float).reshape(20, 2) + 10
+    origins = np.arange(2, 20)
+    before = causal_ewma(values, origins)
+    changed = values.copy()
+    changed[10:] += 900
+    after = causal_ewma(changed, origins)
+    np.testing.assert_array_equal(before[origins <= 10], after[origins <= 10])

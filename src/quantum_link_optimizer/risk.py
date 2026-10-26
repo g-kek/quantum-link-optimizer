@@ -1,6 +1,6 @@
 """Causal risk-aware decisions with explicit units and hard dwell constraints."""
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
 import numpy as np
@@ -170,6 +170,24 @@ def synthetic_scenario(samples, seed, scenario):
     return values
 
 
+def causal_ewma(values, indices, alpha=0.3):
+    """Forecast t using only values through t-1, including the fitting prefix."""
+    smoothed = np.asarray(values, dtype=float).copy()
+    for t in range(1, len(values)):
+        smoothed[t] = alpha * values[t] + (1 - alpha) * smoothed[t - 1]
+    return smoothed[np.asarray(indices) - 1]
+
+
+def point_choices(indices, forecast, config=DEFAULT_RISK_CONFIG):
+    """Same dwell, hysteresis and switching cost; no probability penalty."""
+    return risk_choices(
+        indices,
+        np.zeros_like(forecast),
+        forecast,
+        replace(config, violation_penalty_ms=0.0),
+    )
+
+
 def run_risk(
     output: Path,
     samples=4000,
@@ -194,24 +212,40 @@ def run_risk(
     choices = {
         "risk_selector": risk_choices(indices, probability, forecast, config),
         "previous_rtt_selector": select_channels(previous, config.switching_cost_ms),
+        "previous_rtt_constrained": point_choices(indices, previous, config),
+        "ewma_constrained": point_choices(
+            indices, causal_ewma(values, indices), config
+        ),
+        "nn_rtt_constrained": point_choices(indices, forecast, config),
         "fixed_path_0": np.zeros(len(indices), dtype=np.int64),
         "fixed_path_1": np.ones(len(indices), dtype=np.int64),
         "pointwise_oracle_evaluation_only": np.argmin(actual, axis=1),
     }
+    metrics = {}
+    for name, selected in choices.items():
+        result = policy_metrics(actual, selected, config.switching_cost_ms)
+        result["mean_realized_cost_ms"] = (
+            result["mean_effective_rtt_ms"]
+            + config.violation_penalty_ms * result["sla_violation_rate"]
+        )
+        metrics[name] = result
     report = {
         "source": checkpoint["source"],
         "seed": seed,
         "scenario": scenario,
         "configuration": asdict(config),
         "configuration_source": "predeclared, no test optimization",
+        "comparison_note": (
+            "Constrained previous/EWMA/NN and risk share dwell, hysteresis and "
+            "switching cost. Point selectors omit the probability penalty. "
+            "EWMA alpha=0.3 is predeclared; "
+            "previous_rtt_selector is legacy unrestricted."
+        ),
         "objective": "predicted RTT + penalty_ms * P(RTT(t)>100) + switch_cost_ms",
         "test_first_origin": int(indices[0]),
         "test_last_origin": int(indices[-1]),
         "both_paths_bad_rate_lower_bound": float(np.mean((actual > 100).all(axis=1))),
-        "policies": {
-            name: policy_metrics(actual, selected, config.switching_cost_ms)
-            for name, selected in choices.items()
-        },
+        "policies": metrics,
     }
     dump_json(output / "risk-report.json", report)
     import csv

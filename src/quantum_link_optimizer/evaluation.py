@@ -44,6 +44,7 @@ def policy_metrics(
         "samples": len(actual),
         "mean_rtt_ms": float(selected.mean()),
         "p95_rtt_ms": float(np.quantile(selected, 0.95)),
+        "p99_rtt_ms": float(np.quantile(selected, 0.99)),
         "sla_violation_rate": float(np.mean(selected > sla_ms)),
         "mean_effective_rtt_ms": float(effective.mean()),
         "p95_effective_rtt_ms": float(np.quantile(effective, 0.95)),
