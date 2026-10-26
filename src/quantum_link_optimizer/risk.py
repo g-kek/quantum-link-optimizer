@@ -1,5 +1,6 @@
 """Causal risk-aware decisions with explicit units and hard dwell constraints."""
 
+import pickle
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
@@ -71,7 +72,12 @@ class RiskSelector:
 
 
 def load_warning(path):
-    checkpoint = torch.load(path, weights_only=True, map_location="cpu")
+    try:
+        checkpoint = torch.load(path, weights_only=True, map_location="cpu")
+    except (RuntimeError, EOFError, pickle.UnpicklingError) as error:
+        raise ValueError(
+            "Cannot read warning checkpoint; file may be corrupted"
+        ) from error
     if not isinstance(checkpoint, dict):
         raise ValueError("Warning checkpoint must be a dictionary")
     required = {

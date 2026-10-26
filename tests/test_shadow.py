@@ -222,3 +222,10 @@ def test_corrupt_checkpoint_is_rejected(tmp_path, field, value):
     torch.save(saved, path)
     with pytest.raises(ValueError, match="[Cc]heckpoint"):
         load_warning(path)
+
+
+def test_unreadable_checkpoint_has_a_clear_error(tmp_path):
+    path = tmp_path / "broken.pt"
+    path.write_bytes(b"not a PyTorch checkpoint")
+    with pytest.raises(ValueError, match="Cannot read warning checkpoint"):
+        load_warning(path)
