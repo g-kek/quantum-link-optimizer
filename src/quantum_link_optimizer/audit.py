@@ -8,6 +8,7 @@ import numpy as np
 
 from quantum_link_optimizer.artifacts import dump_json, runtime_metadata
 from quantum_link_optimizer.observations import read_observations
+from quantum_link_optimizer.report import render_report
 from quantum_link_optimizer.risk import RiskConfig, RiskSelector
 
 AUDIT_CONFIG = RiskConfig(violation_penalty_ms=0.0)
@@ -188,4 +189,5 @@ def run_audit(
     }
     output.mkdir(parents=True, exist_ok=True)
     dump_json(output / "report.json", report)
+    render_report(report, output)
     return report

@@ -165,6 +165,8 @@ def synthetic_scenario(samples, seed, scenario):
     values = generate_telemetry(samples, seed)
     if scenario == "shared-stress":
         values += 25.0
+    elif scenario == "high-rtt":
+        values += 625.0
     elif scenario != "normal":
         raise ValueError("Unknown synthetic scenario")
     return values

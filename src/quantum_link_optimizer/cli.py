@@ -179,7 +179,7 @@ def main() -> None:
     risk.add_argument("--seed", type=int, default=42)
     risk.add_argument("--epochs", type=int, default=40)
     risk.add_argument(
-        "--scenario", choices=["normal", "shared-stress"], default="normal"
+        "--scenario", choices=["normal", "shared-stress", "high-rtt"], default="normal"
     )
     risk.add_argument("--violation-penalty-ms", type=float, default=100.0)
     risk.add_argument("--switching-cost-ms", type=float, default=3.0)
@@ -213,9 +213,24 @@ def main() -> None:
     audit.add_argument("--output", type=Path, default=Path("artifacts/ping-audit"))
     audit.add_argument("--sla-ms", type=float, default=100.0)
     audit.add_argument("--max-gap-seconds", type=float, default=2.0)
+    demo = commands.add_parser("demo", help="Build a standalone synthetic MVP report")
+    demo.add_argument("--output", type=Path, default=Path("artifacts/demo"))
+    demo.add_argument("--samples", type=int, default=4000)
+    demo.add_argument("--seed", type=int, default=42)
+    demo.add_argument("--epochs", type=int, default=40)
+    demo.add_argument(
+        "--scenario",
+        choices=["high-rtt", "normal", "shared-stress"],
+        default="high-rtt",
+    )
     args = parser.parse_args()
     try:
-        if args.command == "audit":
+        if args.command == "demo":
+            from quantum_link_optimizer.demo import run_demo
+
+            run_demo(args.output, args.samples, args.seed, args.epochs, args.scenario)
+            print(f"Synthetic demo: {args.output / 'index.html'}")
+        elif args.command == "audit":
             from quantum_link_optimizer.audit import run_audit
 
             report = run_audit(
