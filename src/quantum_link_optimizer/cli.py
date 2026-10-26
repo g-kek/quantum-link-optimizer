@@ -208,9 +208,23 @@ def main() -> None:
     suite.add_argument("--seeds", type=int, nargs="+", default=[41, 42, 43])
     suite.add_argument("--samples", type=int, default=4000)
     suite.add_argument("--epochs", type=int, default=40)
+    audit = commands.add_parser("audit", help="Analyze measured two-path ping RTT")
+    audit.add_argument("--input", type=Path, required=True)
+    audit.add_argument("--output", type=Path, default=Path("artifacts/ping-audit"))
+    audit.add_argument("--sla-ms", type=float, default=100.0)
+    audit.add_argument("--max-gap-seconds", type=float, default=2.0)
     args = parser.parse_args()
     try:
-        if args.command == "generate":
+        if args.command == "audit":
+            from quantum_link_optimizer.audit import run_audit
+
+            report = run_audit(
+                args.input, args.output, args.sla_ms, args.max_gap_seconds
+            )
+            print(
+                json.dumps({k: v for k, v in report.items() if k != "points"}, indent=2)
+            )
+        elif args.command == "generate":
             write_telemetry(args.output, generate_telemetry(args.samples, args.seed))
             print(f"Synthetic telemetry: {args.output}")
         elif args.command == "shadow-replay":
