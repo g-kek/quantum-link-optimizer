@@ -7,7 +7,7 @@ import numpy as np
 import torch
 
 from quantum_link_optimizer.evaluation import policy_metrics, select_channels
-from quantum_link_optimizer.telemetry import generate_telemetry
+from quantum_link_optimizer.telemetry import SOURCE, generate_telemetry
 from quantum_link_optimizer.warning import (
     WarningForecaster,
     dump_json,
@@ -47,6 +47,7 @@ class RiskSelector:
             or rtt.shape != (2,)
             or not np.isfinite(probability).all()
             or not np.isfinite(rtt).all()
+            or (rtt <= 0).any()
             or (probability < 0).any()
             or (probability > 1).any()
         ):
@@ -71,8 +72,80 @@ class RiskSelector:
 
 def load_warning(path):
     checkpoint = torch.load(path, weights_only=True, map_location="cpu")
-    model = WarningForecaster(checkpoint["window"], checkpoint["horizons"])
-    model.load_state_dict(checkpoint["state_dict"])
+    if not isinstance(checkpoint, dict):
+        raise ValueError("Warning checkpoint must be a dictionary")
+    required = {
+        "window",
+        "horizons",
+        "mean",
+        "scale",
+        "state_dict",
+        "source",
+        "train_end",
+        "val_end",
+        "samples",
+        "sla_ms",
+    }
+    if missing := required - checkpoint.keys():
+        raise ValueError(f"Warning checkpoint missing fields: {sorted(missing)}")
+    if checkpoint.get("schema_version", 1) != 1:
+        raise ValueError("Unsupported warning checkpoint schema version")
+    for field in ("window", "train_end", "val_end", "samples"):
+        if type(checkpoint[field]) is not int or checkpoint[field] < 1:
+            raise ValueError(f"Invalid checkpoint {field}")
+    if not (
+        checkpoint["window"]
+        < checkpoint["train_end"]
+        < checkpoint["val_end"]
+        < checkpoint["samples"]
+    ):
+        raise ValueError("Invalid checkpoint chronological boundaries")
+    horizons = checkpoint["horizons"]
+    if (
+        not isinstance(horizons, (list, tuple))
+        or any(type(h) is not int or h < 1 for h in horizons)
+        or 1 not in horizons
+        or len(set(horizons)) != len(horizons)
+    ):
+        raise ValueError("Checkpoint horizons must be unique and include horizon 1")
+    try:
+        mean, scale = (
+            np.asarray(checkpoint["mean"], float),
+            np.asarray(checkpoint["scale"], float),
+        )
+        sla = float(checkpoint["sla_ms"])
+    except (ValueError, TypeError) as error:
+        raise ValueError("Invalid checkpoint scaler or SLA") from error
+    if (
+        mean.shape != (2,)
+        or scale.shape != (2,)
+        or not np.isfinite(mean).all()
+        or not np.isfinite(scale).all()
+        or (scale <= 0).any()
+        or not np.isfinite(sla)
+        or sla <= 0
+    ):
+        raise ValueError(
+            "Checkpoint scaler must be finite with positive scales and SLA"
+        )
+    if checkpoint["source"] != SOURCE:
+        raise ValueError("Unsupported warning model training source")
+    state = checkpoint["state_dict"]
+    if (
+        not isinstance(state, dict)
+        or not state
+        or any(
+            not isinstance(v, torch.Tensor) or not torch.isfinite(v).all()
+            for v in state.values()
+        )
+    ):
+        raise ValueError("Checkpoint weights must be finite tensors")
+    try:
+        RiskConfig(**checkpoint.get("risk_configuration", {}))
+        model = WarningForecaster(checkpoint["window"], horizons)
+        model.load_state_dict(state)
+    except (TypeError, RuntimeError) as error:
+        raise ValueError(f"Invalid warning checkpoint: {error}") from error
     model.eval()
     return model, checkpoint
 

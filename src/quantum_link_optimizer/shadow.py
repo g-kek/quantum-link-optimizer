@@ -50,6 +50,14 @@ def decide(
     mean, scale = np.array(checkpoint["mean"]), np.array(checkpoint["scale"])
     x = ((np.array([o.rtt for o in past]) - mean) / scale)[None]
     rtt, probability = warning_predict(model, x, mean, scale)
+    if (
+        not np.isfinite(rtt).all()
+        or (rtt <= 0).any()
+        or not np.isfinite(probability).all()
+        or (probability < 0).any()
+        or (probability > 1).any()
+    ):
+        return None, None, None, "abstain_invalid_prediction"
     selected, reason = selector.step(
         sample, probability[0, checkpoint["horizons"].index(1)], rtt[0]
     )

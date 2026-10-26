@@ -208,6 +208,7 @@ def run_warning(output: Path, samples=4000, seed=42, epochs=40, values=None):
     output.mkdir(parents=True, exist_ok=True)
     write_telemetry(output / "telemetry.csv", values)
     checkpoint = {
+        "schema_version": 1,
         "fit_prefix_sha256": hashlib.sha256(
             np.ascontiguousarray(values[: data.val_end]).tobytes()
         ).hexdigest(),

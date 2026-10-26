@@ -174,3 +174,51 @@ def test_atlas_single_path_fixture_no_resampling(tmp_path):
     observed = read_observations(tmp_path / "atlas" / "atlas-telemetry.csv")
     assert all(o.rtt[1] is None for o in observed)
     assert observed[-1].status == ("timeout", "missing")
+
+
+def test_invalid_forecast_records_abstention_before_outcome(tmp_path):
+    model = WarningForecaster(4, (1, 5))
+    with torch.no_grad():
+        model.network[-1].bias.fill_(float("nan"))
+    observations = synthetic_observations(generate_telemetry(100))
+    log = tmp_path / "invalid.jsonl"
+
+    def outcomes():
+        for o in observations:
+            if o.sample >= 80:
+                decision = json.loads(log.read_text().splitlines()[-1])
+                assert decision["kind"] == "decision"
+                assert decision["reason"] == "abstain_invalid_prediction"
+                assert decision["forecast_rtt_ms"] is None
+            yield o
+
+    report = replay_stream(
+        [(o.sample, o.timestamp, o.time_seconds) for o in observations],
+        outcomes(),
+        model,
+        checkpoint(),
+        log,
+        80,
+    )
+    assert report["abstentions"] == 20
+    assert report["evaluated_selected_outcomes"] == 0
+    assert "NaN" not in log.read_text()
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("scale", [0, 1]),
+        ("mean", [float("nan"), 1]),
+        ("horizons", [5, 15]),
+        ("schema_version", 999),
+    ],
+)
+def test_corrupt_checkpoint_is_rejected(tmp_path, field, value):
+    run_risk(tmp_path, samples=500, epochs=1)
+    path = tmp_path / "warning-model.pt"
+    saved = torch.load(path, weights_only=True)
+    saved[field] = value
+    torch.save(saved, path)
+    with pytest.raises(ValueError, match="[Cc]heckpoint"):
+        load_warning(path)
