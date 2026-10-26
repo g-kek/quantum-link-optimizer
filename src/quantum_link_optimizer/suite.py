@@ -6,9 +6,9 @@ from pathlib import Path
 
 import numpy as np
 
+from quantum_link_optimizer.artifacts import dump_json, runtime_metadata
 from quantum_link_optimizer.risk import run_risk
 from quantum_link_optimizer.shadow import run_shadow
-from quantum_link_optimizer.warning import dump_json
 
 
 def run_suite(output: Path, seeds=(41, 42, 43), samples=4000, epochs=40):
@@ -53,6 +53,7 @@ def run_suite(output: Path, seeds=(41, 42, 43), samples=4000, epochs=40):
                 {"seed": seed, "scenario": scenario, "risk": risk, "replay": replay}
             )
     report = {
+        "runtime": runtime_metadata(),
         "seeds": list(seeds),
         "samples": samples,
         "epochs": epochs,

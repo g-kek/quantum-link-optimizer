@@ -8,8 +8,8 @@ from pathlib import Path
 
 import numpy as np
 
+from quantum_link_optimizer.artifacts import dump_json, runtime_metadata
 from quantum_link_optimizer.observations import COLUMNS, read_observations
-from quantum_link_optimizer.warning import dump_json
 
 
 def atlas_benchmark(input_path: Path, output: Path):
@@ -91,6 +91,7 @@ def atlas_benchmark(input_path: Path, output: Path):
     event_count = int(np.sum(current > 100))
     gaps = np.diff([o.time_seconds for o in observations])
     report = {
+        "runtime": runtime_metadata(),
         "source": "ripe_atlas",
         "raw_sha256": digest,
         "identity": list(next(iter(identities))),

@@ -3,7 +3,6 @@
 import copy
 import csv
 import hashlib
-import json
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -11,6 +10,7 @@ import numpy as np
 import torch
 from torch import nn
 
+from quantum_link_optimizer.artifacts import dump_json, runtime_metadata
 from quantum_link_optimizer.telemetry import SOURCE, generate_telemetry, write_telemetry
 
 HORIZONS = (1, 5, 15, 60)
@@ -192,12 +192,6 @@ def alarm_metrics(values, indices, probability, horizon, threshold=0.5, sla_ms=1
     }
 
 
-def dump_json(path, report):
-    path.write_text(
-        json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8"
-    )
-
-
 def run_warning(output: Path, samples=4000, seed=42, epochs=40, values=None):
     values = generate_telemetry(samples, seed) if values is None else values
     data = warning_data(values)
@@ -228,6 +222,7 @@ def run_warning(output: Path, samples=4000, seed=42, epochs=40, values=None):
     }
     torch.save(checkpoint, output / "warning-model.pt")
     report = {
+        "runtime": runtime_metadata(),
         "source": SOURCE,
         "seed": seed,
         "sample_interval_seconds": 1.0,

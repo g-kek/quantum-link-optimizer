@@ -6,11 +6,11 @@ from pathlib import Path
 import numpy as np
 import torch
 
+from quantum_link_optimizer.artifacts import dump_json, runtime_metadata
 from quantum_link_optimizer.evaluation import policy_metrics, select_channels
 from quantum_link_optimizer.telemetry import SOURCE, generate_telemetry
 from quantum_link_optimizer.warning import (
     WarningForecaster,
-    dump_json,
     run_warning,
     warning_predict,
 )
@@ -230,6 +230,7 @@ def run_risk(
         )
         metrics[name] = result
     report = {
+        "runtime": runtime_metadata(),
         "source": checkpoint["source"],
         "seed": seed,
         "scenario": scenario,

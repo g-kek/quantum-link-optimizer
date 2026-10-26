@@ -8,6 +8,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
+from quantum_link_optimizer.artifacts import dump_json, runtime_metadata
 from quantum_link_optimizer.observations import Observation, read_observations
 from quantum_link_optimizer.risk import (
     DEFAULT_RISK_CONFIG,
@@ -16,7 +17,7 @@ from quantum_link_optimizer.risk import (
     load_warning,
 )
 from quantum_link_optimizer.telemetry import SOURCE, read_telemetry
-from quantum_link_optimizer.warning import dump_json, warning_predict
+from quantum_link_optimizer.warning import warning_predict
 
 
 def synthetic_observations(values):
@@ -249,6 +250,7 @@ def run_shadow(
     )
     report.update(
         {
+            "runtime": runtime_metadata(),
             "input_source": sorted({o.source for o in observations}),
             "input_sha256": hashlib.sha256(input_path.read_bytes()).hexdigest(),
             "model_sha256": hashlib.sha256(model_path.read_bytes()).hexdigest(),
