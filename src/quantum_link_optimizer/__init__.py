@@ -1,3 +1,3 @@
-"""Offline experiments with explicitly synthetic classical RTT telemetry."""
+"""Two-path ping RTT audits and explicitly synthetic forecasting experiments."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
