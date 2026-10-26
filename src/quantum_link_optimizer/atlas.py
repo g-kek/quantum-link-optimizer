@@ -18,6 +18,26 @@ def atlas_benchmark(input_path: Path, output: Path):
         raise ValueError(
             "Expected a local Atlas JSON list with at least 10 observations"
         )
+    for index, row in enumerate(records):
+        if not isinstance(row, dict):
+            raise ValueError(f"Atlas record {index}: expected an object")
+        for field in ("msm_id", "prb_id", "timestamp"):
+            value = row.get(field)
+            if not isinstance(value, (int, float)) or isinstance(value, bool):
+                raise ValueError(f"Atlas record {index}: invalid {field}")
+            if not np.isfinite(value) or value < 0:
+                raise ValueError(f"Atlas record {index}: invalid {field}")
+        try:
+            datetime.fromtimestamp(row["timestamp"], UTC)
+        except (ValueError, OverflowError, OSError) as error:
+            raise ValueError(f"Atlas record {index}: invalid timestamp") from error
+        if row.get("dst_addr") is not None and not isinstance(row["dst_addr"], str):
+            raise ValueError(f"Atlas record {index}: invalid destination")
+        results = row.get("result", [])
+        if not isinstance(results, list) or any(
+            not isinstance(packet, dict) for packet in results
+        ):
+            raise ValueError(f"Atlas record {index}: invalid packet results")
     identities = {(r["msm_id"], r["prb_id"], r.get("dst_addr")) for r in records}
     if len(identities) != 1:
         raise ValueError("Benchmark supports exactly one measurement/probe/destination")
@@ -35,6 +55,7 @@ def atlas_benchmark(input_path: Path, output: Path):
                 p["rtt"]
                 for p in results
                 if isinstance(p.get("rtt"), (int, float))
+                and not isinstance(p["rtt"], bool)
                 and np.isfinite(p["rtt"])
                 and p["rtt"] > 0
             ]
@@ -64,8 +85,10 @@ def atlas_benchmark(input_path: Path, output: Path):
     origins = np.arange(test_start, len(values))
     valid = np.isfinite(values[origins]) & np.isfinite(values[origins - 1])
     actual, previous = values[origins[valid]], values[origins[valid] - 1]
+    available = np.isfinite(values[origins])
+    current = values[origins[available]]
     frequency = float(np.mean(train > 100))
-    event_count = int(np.sum(actual > 100))
+    event_count = int(np.sum(current > 100))
     gaps = np.diff([o.time_seconds for o in observations])
     report = {
         "source": "ripe_atlas",
@@ -83,6 +106,9 @@ def atlas_benchmark(input_path: Path, output: Path):
         "aggregation": "Successful-packet median; failed packets counted separately",
         "test_origins": len(origins),
         "evaluated_origins": int(valid.sum()),
+        "test_available_origins": int(available.sum()),
+        "baseline_excluded_missing_previous": int(np.sum(available & ~valid)),
+        "baseline_test_breaches": int(np.sum(actual > 100)),
         "test_missing_or_timeout_origins": int(np.sum(~np.isfinite(values[origins]))),
         "train_frequency_sla_breach": frequency,
         "test_breaches": event_count,
@@ -100,8 +126,8 @@ def atlas_benchmark(input_path: Path, output: Path):
         "train_frequency_brier": float(np.mean((frequency - (actual > 100)) ** 2))
         if len(actual)
         else None,
-        "test_mean_rtt_ms": float(actual.mean()) if len(actual) else None,
-        "test_p95_rtt_ms": float(np.quantile(actual, 0.95)) if len(actual) else None,
+        "test_mean_rtt_ms": float(current.mean()) if len(current) else None,
+        "test_p95_rtt_ms": float(np.quantile(current, 0.95)) if len(current) else None,
         "path_selection_comparison": "unavailable: only one real path",
     }
     dump_json(output / "atlas-report.json", report)
