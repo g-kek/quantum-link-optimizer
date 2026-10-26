@@ -5,6 +5,8 @@ from pathlib import Path
 
 import numpy as np
 
+from quantum_link_optimizer.csvio import strict_rows
+
 COLUMNS = ("sample", "time_s", "channel_0_rtt_ms", "channel_1_rtt_ms", "source")
 SOURCE = "synthetic_uncalibrated"
 
@@ -57,9 +59,7 @@ def write_telemetry(path: Path, values: np.ndarray) -> None:
 def read_telemetry(path: Path) -> np.ndarray:
     values = []
     with path.open(newline="", encoding="utf-8") as stream:
-        reader = csv.DictReader(stream)
-        if tuple(reader.fieldnames or ()) != COLUMNS:
-            raise ValueError(f"Required CSV columns: {COLUMNS}")
+        reader = strict_rows(stream, COLUMNS)
         for index, row in enumerate(reader):
             if int(row["sample"]) != index or float(row["time_s"]) != index:
                 raise ValueError("Samples must be contiguous at one-second intervals")

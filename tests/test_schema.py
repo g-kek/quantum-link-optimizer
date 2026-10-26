@@ -31,3 +31,23 @@ def test_invalid_rtt(value):
     values[42, 0] = value
     with pytest.raises(ValueError):
         validate_telemetry(values)
+
+
+@pytest.mark.parametrize("external", [False, True])
+@pytest.mark.parametrize("extra", [False, True])
+def test_readers_reject_short_and_long_rows(tmp_path, external, extra):
+    from quantum_link_optimizer.observations import COLUMNS, read_observations
+
+    path = tmp_path / "invalid.csv"
+    if external:
+        header = ",".join(COLUMNS)
+        row = "0,2026-01-01T00:00:00Z,0,ok,7,real_telemetry,fixture"
+        reader = read_observations
+    else:
+        write_telemetry(path, generate_telemetry(100))
+        header, row = path.read_text().splitlines()[:2]
+        reader = read_telemetry
+    row = row + ",extra" if extra else row.rsplit(",", 1)[0]
+    path.write_text(header + "\n" + row + "\n")
+    with pytest.raises(ValueError, match="CSV row 2: expected exactly"):
+        reader(path)

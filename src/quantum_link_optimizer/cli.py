@@ -275,7 +275,7 @@ def main() -> None:
                     allow_nan=False,
                 )
             )
-    except ValueError as error:
+    except (ValueError, OSError) as error:
         parser.error(str(error))
 
 

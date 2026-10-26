@@ -1,11 +1,12 @@
 """External telemetry schema; never converts real observations into synthetic data."""
 
-import csv
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
 import numpy as np
+
+from quantum_link_optimizer.csvio import strict_rows
 
 COLUMNS = ("sample", "timestamp", "path", "status", "rtt_ms", "source", "provenance")
 
@@ -24,9 +25,7 @@ class Observation:
 def read_observations(path: Path) -> list[Observation]:
     groups = {}
     with path.open(newline="", encoding="utf-8") as stream:
-        reader = csv.DictReader(stream)
-        if tuple(reader.fieldnames or ()) != COLUMNS:
-            raise ValueError(f"External telemetry columns must be {COLUMNS}")
+        reader = strict_rows(stream, COLUMNS)
         for row in reader:
             sample, channel = int(row["sample"]), int(row["path"])
             if sample < 0 or channel not in (0, 1):
