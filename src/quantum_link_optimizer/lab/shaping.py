@@ -1,0 +1,53 @@
+def apply_link(topology, point, settings):
+    node, device = point
+    parent = ["root"]
+    if settings.get("rate_mbit"):
+        topology.execute(
+            node,
+            "tc",
+            "qdisc",
+            "replace",
+            "dev",
+            device,
+            "root",
+            "handle",
+            "1:",
+            "tbf",
+            "rate",
+            f"{settings['rate_mbit']}mbit",
+            "burst",
+            "16kb",
+            "limit",
+            "128kb",
+        )
+        parent = ["parent", "1:1", "handle", "10:"]
+    args = [
+        "tc",
+        "qdisc",
+        "replace",
+        "dev",
+        device,
+        *parent,
+        "netem",
+        "limit",
+        str(settings.get("limit", 1000)),
+    ]
+    if settings.get("delay_ms"):
+        args += ["delay", f"{settings['delay_ms']}ms"]
+        if settings.get("jitter_ms"):
+            args += [f"{settings['jitter_ms']}ms"]
+    for field, option in (("loss_pct", "loss"), ("reorder_pct", "reorder")):
+        if settings.get(field):
+            args += [option, f"{settings[field]}%"]
+    topology.execute(node, *args)
+
+
+def configure(topology, config):
+    links = dict(config["paths"])
+    if topology.shared:
+        links["shared"] = config.get("shared", {})
+    for name, directions in links.items():
+        for index, direction in enumerate(("forward", "reverse")):
+            apply_link(
+                topology, topology.points[name][index], directions.get(direction, {})
+            )
