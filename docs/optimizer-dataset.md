@@ -133,3 +133,5 @@ VM/netem остаются непроверенными из-за нехватк�
 `artifacts/datasets/smoke-features-v2/`: 8 эпизодов, 24 train-строки и
 16 validation-строк (20 пар A/B), 12 наблюдаемых исходов команд.
 Это только smoke. Финальные эпизоды не выполнялись.
+
+Сценарии оборудования и Boundary Clocks, schema v2 и допущения: [дополнение](equipment-clock-incidents.md).

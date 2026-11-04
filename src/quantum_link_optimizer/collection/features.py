@@ -1,5 +1,12 @@
 from collections import deque
 
+from quantum_link_optimizer.incidents.features import (
+    FEATURE_NAMES as COMPONENT_FEATURES,
+)
+from quantum_link_optimizer.incidents.features import ComponentHistory
+
+FEATURE_SCHEMA_VERSION = 2
+
 FEATURE_NAMES = (
     "path_is_b",
     "history_count",
@@ -13,6 +20,7 @@ FEATURE_NAMES = (
     "last_key_wait_ms",
     "key_observation_age_ms",
     "sender_queue_depth",
+    *COMPONENT_FEATURES,
 )
 
 
@@ -22,11 +30,13 @@ class History:
         self.samples = {path: deque(maxlen=window) for path in ("A", "B")}
         self.keys = {}
         self.queues = {}
+        self.components = ComponentHistory(max_age_ms)
 
     def observe(self, event):
         path = event.get("path")
         if path not in self.samples:
             return
+        self.components.observe(event)
         if event["event"] == "probe_result":
             self.samples[path].append(event)
         elif event["event"] == "session_ready":
@@ -78,12 +88,23 @@ class History:
         latest_ns = max(
             (event["algorithm_available_ns"] for event in used), default=None
         )
+        component_features, component_ns = self.components.at(path, decision_ns)
+        features.update(component_features)
+        latest_ns = max(
+            (value for value in (latest_ns, component_ns) if value is not None),
+            default=None,
+        )
         if latest_ns is not None and latest_ns > decision_ns:
             raise ValueError("future observation in features")
         return features, latest_ns
 
 
-def rows(config, events):
+def rows(config, events, truth_events=()):
+    truth = {
+        (event["sample"], event["path"]): event
+        for event in truth_events
+        if event["event"] == "incident_state"
+    }
     decisions = [event for event in events if event["event"] == "decision"]
     probes = {}
     commands = {}
@@ -120,6 +141,7 @@ def rows(config, events):
                 else None
             )
             yield {
+                "feature_schema_version": FEATURE_SCHEMA_VERSION,
                 "episode_id": config["episode_id"],
                 "split": config["split"],
                 "sample": decision["sample"],
@@ -128,6 +150,7 @@ def rows(config, events):
                 "feature_available_ns": observed_ns,
                 "features": features,
                 "targets": {
+                    **component_targets(truth.get((decision["sample"], path))),
                     "probe_status": probe["status"] if probe else "missing",
                     "rtt_ms": rtt,
                     "probe_within_target": (
@@ -152,3 +175,20 @@ def rows(config, events):
                     else None,
                 },
             }
+
+
+def component_targets(event):
+    return {
+        "bc_state_at_decision": event["clock"].get("state") if event else None,
+        "bc_sync_usable_at_decision": event["clock"].get("sync_usable")
+        if event
+        else None,
+        "device_available_at_decision": event["device_available"] if event else None,
+        "bc_actual_offset_ns_at_decision": event["clock"]["actual_offset_ns"]
+        if event
+        else None,
+        "bc_within_budget_at_decision": event["clock"]["within_budget"]
+        if event
+        else None,
+        "component_truth_recorded_ns": event["available_ns"] if event else None,
+    }

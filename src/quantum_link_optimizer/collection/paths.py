@@ -7,7 +7,7 @@ from .probes import Echo, Probe
 
 
 async def open_path(
-    loop, path, config, adapter, store, sender_log, receiver_log, resources
+    loop, path, config, adapter, store, sender_log, receiver_log, resources, device=None
 ):
     settings = config["network"][path]
     receiver = Receiver(
@@ -18,7 +18,10 @@ async def open_path(
     )
     resources["agents"].append(receiver)
     relay = Relay(
-        received.get_extra_info("sockname"), settings, config["seed"] + (path == "B")
+        received.get_extra_info("sockname"),
+        settings,
+        config["seed"] + (path == "B"),
+        device=device,
     )
     proxy, _ = await loop.create_datagram_endpoint(
         lambda: relay, local_addr=("127.0.0.1", 0)
@@ -35,7 +38,10 @@ async def open_path(
     echo, _ = await loop.create_datagram_endpoint(Echo, local_addr=("127.0.0.1", 0))
     resources["transports"].append(echo)
     probe_relay = Relay(
-        echo.get_extra_info("sockname"), settings, config["seed"] + 2 + (path == "B")
+        echo.get_extra_info("sockname"),
+        settings,
+        config["seed"] + 2 + (path == "B"),
+        device=device,
     )
     probe_proxy, _ = await loop.create_datagram_endpoint(
         lambda: probe_relay, local_addr=("127.0.0.1", 0)

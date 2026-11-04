@@ -2,7 +2,7 @@ import math
 import statistics
 from array import array
 
-from .features import FEATURE_NAMES
+from .features import FEATURE_NAMES, FEATURE_SCHEMA_VERSION
 
 
 def fit(rows):
@@ -39,6 +39,7 @@ def fit(rows):
             "scale": math.sqrt(combined_variance) or 1,
         }
     return {
+        "feature_schema_version": FEATURE_SCHEMA_VERSION,
         "fit_split": "train",
         "fit_episode_ids": sorted(episodes),
         "features": stats,
@@ -46,6 +47,8 @@ def fit(rows):
 
 
 def transform(features, stats):
+    if stats.get("feature_schema_version") != FEATURE_SCHEMA_VERSION:
+        raise ValueError("preprocessing feature schema mismatch")
     result = {}
     for name, parameters in stats["features"].items():
         value = features[name]

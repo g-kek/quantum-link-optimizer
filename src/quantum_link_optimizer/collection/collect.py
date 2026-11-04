@@ -2,6 +2,7 @@ import asyncio
 from contextlib import ExitStack
 
 from quantum_link_optimizer.commands.store import Store
+from quantum_link_optimizer.incidents.runtime import Runtime
 from quantum_link_optimizer.kms.api import Client, close_clients, start_server
 from quantum_link_optimizer.kms.model import Settings
 from quantum_link_optimizer.kms.service import Service
@@ -19,6 +20,7 @@ async def collect_episode(config, output):
         topology="parallel A/B UDP probes and fixed-path AEAD commands",
         data_origin="laboratory_packets",
         capture=None,
+        assumptions=config.get("incidents", {}).get("assumptions", []),
     )
     resources = {"agents": [], "relays": [], "transports": [], "probes": []}
     tasks = []
@@ -26,6 +28,7 @@ async def collect_episode(config, output):
     service = None
     store = None
     failure = None
+    incidents = None
     with ExitStack() as stack:
         logs = {}
         for name in ("sender", "receiver", "kms", "samples", "truth"):
@@ -44,6 +47,14 @@ async def collect_episode(config, output):
             adapter = Client(port=server.sockets[0].getsockname()[1])
             store = Store(output / "receiver.sqlite")
             loop = asyncio.get_running_loop()
+            if "incidents" in config:
+                incidents = Runtime(
+                    config["incidents"],
+                    config["samples"],
+                    config["seed"],
+                    emit,
+                    logs["truth"].emit,
+                )
             paths = {}
             for path in ("A", "B"):
                 paths[path] = await open_path(
@@ -55,6 +66,7 @@ async def collect_episode(config, output):
                     emit,
                     logs["receiver"].emit,
                     resources,
+                    device=incidents.devices[path] if incidents else None,
                 )
             logs["truth"].emit(
                 "initial_conditions", paths=config["network"], profile=config["profile"]
@@ -68,6 +80,8 @@ async def collect_episode(config, output):
                 await asyncio.sleep(
                     max(0, started + sample * config["interval_s"] - loop.time())
                 )
+                if incidents:
+                    incidents.tick(sample)
                 if sample in changes:
                     for path, settings in changes[sample].items():
                         for relay in paths[path][2]:
@@ -118,6 +132,8 @@ async def collect_episode(config, output):
             manifest["error"] = type(error).__name__
             failure = error
         finally:
+            if incidents:
+                incidents.close()
             for task in tasks:
                 task.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)

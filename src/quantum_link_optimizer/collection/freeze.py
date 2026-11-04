@@ -2,6 +2,8 @@ import json
 
 from quantum_link_optimizer.telemetry_lab.manifest import digest, verify_files
 
+from .features import FEATURE_SCHEMA_VERSION
+
 
 def freeze(dataset, policy, output):
     manifest = json.loads((dataset / "manifest.json").read_text())
@@ -10,6 +12,9 @@ def freeze(dataset, policy, output):
         raise ValueError("freeze requires a complete, intact development dataset")
     if any(source["split"] == "final_test" for source in manifest["sources"]):
         raise ValueError("cannot freeze using final-test data")
+    stats = json.loads((dataset / "preprocessing.json").read_text())
+    if stats.get("feature_schema_version") != FEATURE_SCHEMA_VERSION:
+        raise ValueError("rebuild dataset for current feature schema before freeze")
     files = {
         "policy": policy,
         "preprocessing": dataset / "preprocessing.json",
@@ -34,4 +39,7 @@ def read_lock(path):
     for record in lock.values():
         if digest(Path(record["path"])) != record["sha256"]:
             raise ValueError("frozen policy, preprocessing or dataset changed")
+    stats = json.loads(Path(lock["preprocessing"]["path"]).read_text())
+    if stats.get("feature_schema_version") != FEATURE_SCHEMA_VERSION:
+        raise ValueError("frozen feature schema changed; rebuild and freeze again")
     return lock

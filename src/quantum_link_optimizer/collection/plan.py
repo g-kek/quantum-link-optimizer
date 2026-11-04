@@ -3,6 +3,15 @@ import json
 import math
 from copy import deepcopy
 
+from quantum_link_optimizer.incidents.profiles import (
+    NAMES,
+)
+from quantum_link_optimizer.incidents.profiles import (
+    profile as incident_profile,
+)
+from quantum_link_optimizer.incidents.profiles import (
+    validate as validate_incidents,
+)
 from quantum_link_optimizer.kms.model import Settings
 
 SPLITS = {"train", "validation", "final_test"}
@@ -37,7 +46,9 @@ def episodes(plan):
                             interval_s=interval,
                             fixed_path=fixed_path,
                         )
-                        initial, changes = PROFILES[profile]
+                        initial, changes = PROFILES.get(
+                            profile, ({"A": 60, "B": 60}, [])
+                        )
                         config["network"] = {
                             path: directions(rtt) for path, rtt in initial.items()
                         }
@@ -59,6 +70,11 @@ def episodes(plan):
                             config["kms"]["delay_s"] = 0.15
                         if profile == "loss-a":
                             config["network"]["A"]["forward"]["loss_pct"] = 10
+                        if profile in NAMES:
+                            config["incidents"] = incident_profile(
+                                profile, config["samples"]
+                            )
+                            validate_incidents(config["incidents"], config["samples"])
                         fingerprint = hashlib.sha256(
                             json.dumps(config, sort_keys=True).encode()
                         ).hexdigest()[:12]
@@ -86,7 +102,7 @@ def validate_plan(plan):
             not math.isfinite(i) or i <= 0 for i in settings["intervals_s"]
         ):
             raise ValueError("invalid intervals")
-    if not plan["profiles"] or set(plan["profiles"]) - PROFILES.keys():
+    if not plan["profiles"] or set(plan["profiles"]) - (PROFILES.keys() | NAMES):
         raise ValueError("unknown profile")
     if len(set(plan["profiles"])) != len(plan["profiles"]):
         raise ValueError("duplicate profile")

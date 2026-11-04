@@ -11,7 +11,7 @@ from quantum_link_optimizer.telemetry_lab.manifest import (
 from quantum_link_optimizer.telemetry_lab.report import records
 
 from .audit import Audit
-from .features import FEATURE_NAMES, rows
+from .features import FEATURE_NAMES, FEATURE_SCHEMA_VERSION, rows
 from .preprocess import fit
 from .series import load_series
 
@@ -51,6 +51,11 @@ def export_rows(sources, output, splits):
         "episodes": Counter(),
         "probe_statuses": Counter(),
         "command_labels": 0,
+        "component_labels": 0,
+        "clock_budget_violations": 0,
+        "clock_unusable_labels": 0,
+        "clock_stale_rows": 0,
+        "device_stale_rows": 0,
     }
     audits = defaultdict(Audit)
     with ExitStack() as stack:
@@ -67,13 +72,24 @@ def export_rows(sources, output, splits):
                 raise ValueError("missing or duplicate decisions")
             pair = {}
             quality["episodes"][config["split"]] += 1
-            for row in rows(config, events):
+            for row in rows(config, events, records(path / "truth.jsonl")):
                 handles[row["split"]].write(json.dumps(row) + "\n")
                 quality["rows"][row["split"]] += 1
                 quality["probe_statuses"][row["targets"]["probe_status"]] += 1
                 quality["command_labels"] += (
                     row["targets"]["command_status"] is not None
                 )
+                quality["component_labels"] += (
+                    row["targets"]["bc_within_budget_at_decision"] is not None
+                )
+                quality["clock_budget_violations"] += (
+                    row["targets"]["bc_within_budget_at_decision"] is False
+                )
+                quality["clock_unusable_labels"] += (
+                    row["targets"]["bc_sync_usable_at_decision"] is False
+                )
+                quality["clock_stale_rows"] += row["features"]["bc_stale"]
+                quality["device_stale_rows"] += row["features"]["device_stale"]
                 pair[row["path"]] = row
                 if len(pair) == 2:
                     audits[config["split"], config["profile"]].add(pair)
@@ -115,6 +131,10 @@ def build_dataset(series, output, allow_partial=False, frozen_preprocessing=None
     stats = None
     if final:
         stats = json.loads(frozen_preprocessing.read_text())
+        if stats.get("feature_schema_version") != FEATURE_SCHEMA_VERSION:
+            raise ValueError(
+                "frozen preprocessing schema changed; rebuild and freeze again"
+            )
         if stats.get("fit_split") != "train" or set(stats["features"]) != set(
             FEATURE_NAMES
         ):
@@ -130,6 +150,7 @@ def build_dataset(series, output, allow_partial=False, frozen_preprocessing=None
         output, {"source_series": str(series.resolve()), "target_ms": targets.pop()}
     )
     manifest.update(
+        feature_schema_version=FEATURE_SCHEMA_VERSION,
         status="failed",
         complete=False,
         missing_episodes=missing,
@@ -141,6 +162,7 @@ def build_dataset(series, output, allow_partial=False, frozen_preprocessing=None
                 "profile": c["profile"],
                 "path": str(p.resolve()),
                 "manifest_sha256": digest(p / "manifest.json"),
+                "assumptions": c.get("incidents", {}).get("assumptions", []),
             }
             for c, p in sources
         ],
