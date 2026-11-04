@@ -5,6 +5,7 @@ import time
 import uuid
 from datetime import UTC, datetime
 
+from .command_workload import CommandWorkload
 from .shaping import configure
 from .system import command, run, snapshot
 from .topology import Topology
@@ -64,6 +65,10 @@ def run_scenario(config, output):
     try:
         topology.create()
         configure(topology, config)
+        workload = None
+        if "commands" in config:
+            workload = CommandWorkload(config["commands"], output, topology, spawn)
+            workload.start_services()
         write_json(
             output / "topology.json",
             {
@@ -85,9 +90,10 @@ def run_scenario(config, output):
                 "any",
                 "-w",
                 str((output / f"{node}.pcap").resolve()),
+                "icmp or udp",
             )
             for node, namespace in topology.names.items()
-            if namespace in topology.created
+            if namespace in topology.created and node != "k"
         ]
         servers = []
         for index, branch in enumerate(("A", "B"), 1):
@@ -148,6 +154,8 @@ def run_scenario(config, output):
                     "-J",
                 )
             )
+        if workload:
+            workload.start_sender()
         started = time.monotonic()
         events = sorted(config.get("events", []), key=lambda event: event["at_s"])
         with (
@@ -155,7 +163,12 @@ def run_scenario(config, output):
             (output / "queues.jsonl").open("w") as queues,
         ):
             while (elapsed := time.monotonic() - started) < config["duration_s"]:
-                if any(process.poll() is not None for process in captures + servers):
+                if any(
+                    process.poll() is not None
+                    for process in captures
+                    + servers
+                    + (workload.services if workload else [])
+                ):
                     raise RuntimeError("capture or server exited during measurement")
                 while events and events[0]["at_s"] <= elapsed:
                     event = events.pop(0)
@@ -189,6 +202,8 @@ def run_scenario(config, output):
                 time.sleep(0.1)
         for process in probes + background:
             process.wait(timeout=5)
+        if workload:
+            workload.finish()
         snapshot(output / "final.json", topology.created)
         manifest["traffic_exit_codes"] = [p.returncode for p in probes + background]
         manifest["status"] = "collected"

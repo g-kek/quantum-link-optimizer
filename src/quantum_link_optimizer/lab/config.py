@@ -33,6 +33,17 @@ def load_config(path):
         if flow["path"] not in {"A", "B"}:
             raise ValueError("invalid background path")
         validate_link({"rate_mbit": flow["rate_mbit"]})
+    if "commands" in config:
+        commands = config["commands"]
+        if commands["path"] not in {"A", "B"}:
+            raise ValueError("invalid command path")
+        if type(commands["count"]) is not int or commands["count"] <= 0:
+            raise ValueError("command count must be positive")
+        if not isinstance(commands["kms_config"], str):
+            raise ValueError("kms_config must be a path")
+        duration = commands["count"] * commands.get("interval_s", 0.02)
+        if duration + commands.get("deadline_s", 1) > config["duration_s"]:
+            raise ValueError("command workload exceeds measurement window")
     return config
 
 

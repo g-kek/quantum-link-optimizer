@@ -1,0 +1,97 @@
+import asyncio
+import time
+
+from cryptography.exceptions import InvalidTag
+
+from quantum_link_optimizer.kms.model import KmsError
+
+from .wire import inspect, seal, unseal
+
+
+class Receiver(asyncio.DatagramProtocol):
+    def __init__(self, path, adapter, store, emit, queue_limit=64, drop_acks=0):
+        self.path = path
+        self.adapter = adapter
+        self.store = store
+        self.emit = emit
+        if queue_limit < 1:
+            raise ValueError("queue_limit must be positive")
+        self.queue = asyncio.Queue(maxsize=queue_limit)
+        self.drop_acks = drop_acks
+        self.worker = None
+        self.transport = None
+        self.cache = {}
+
+    def connection_made(self, transport):
+        self.transport = transport
+        self.worker = asyncio.create_task(self.process())
+
+    def datagram_received(self, packet, address):
+        try:
+            self.queue.put_nowait((packet, address, time.monotonic_ns()))
+        except asyncio.QueueFull:
+            self.emit("receiver_drop", path=self.path, reason="queue_full")
+
+    async def process(self):
+        while True:
+            packet, address, received = await self.queue.get()
+            try:
+                envelope = inspect(packet, "command")
+                header = envelope["header"]
+                if header["path"] != self.path:
+                    raise ValueError("wrong path")
+                key_id = header["key_id"]
+                key = self.cache.get(key_id)
+                if key is None or key.expires_at <= time.monotonic():
+                    key = await self.adapter.request(
+                        "get",
+                        key_id=key_id,
+                        session=header["session"],
+                        path=self.path,
+                    )
+                    self.cache = {
+                        item_id: item
+                        for item_id, item in self.cache.items()
+                        if item.expires_at > time.monotonic()
+                    }
+                    if len(self.cache) >= 128:
+                        self.cache.pop(next(iter(self.cache)))
+                    self.cache[key_id] = key
+                body = unseal(key, envelope, "command")
+                self.emit(
+                    "command_received",
+                    command_id=body["id"],
+                    session=key.session,
+                    path=self.path,
+                    received_ns=received,
+                )
+                result = self.store.execute(key.session, body)
+                self.emit(
+                    "command_result",
+                    session=key.session,
+                    path=self.path,
+                    command_id=body["id"],
+                    **{k: v for k, v in result.items() if k != "id"},
+                )
+                if self.drop_acks:
+                    self.drop_acks -= 1
+                    self.emit("ack_omitted", command_id=body["id"], path=self.path)
+                else:
+                    self.transport.sendto(seal(key, "ack", result), address)
+                    self.emit(
+                        "ack_sent",
+                        command_id=body["id"],
+                        path=self.path,
+                        session=key.session,
+                    )
+            except (ValueError, KeyError, TypeError, InvalidTag, KmsError) as error:
+                self.emit(
+                    "receiver_rejected", path=self.path, reason=type(error).__name__
+                )
+            finally:
+                self.queue.task_done()
+
+    async def close(self):
+        self.transport.close()
+        self.worker.cancel()
+        await asyncio.gather(self.worker, return_exceptions=True)

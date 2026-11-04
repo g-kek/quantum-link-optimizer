@@ -3,7 +3,9 @@ from .system import run
 
 class Topology:
     def __init__(self, token, shared=False):
-        self.names = {key: f"ql-{token}-{key}" for key in ("s", "a", "b", "r", "c")}
+        self.names = {
+            key: f"ql-{token}-{key}" for key in ("s", "a", "b", "r", "c", "k")
+        }
         self.shared = shared
         self.created = []
         self.points = {}
@@ -64,6 +66,13 @@ class Topology:
             self.route("c", "10.250.1.0/24", "10.240.5.2")
             self.route("r", "10.250.0.0/24", "10.240.5.1")
             self.points["shared"] = (("c", "to-r"), ("r", "to-c"))
+
+    def create_kms(self):
+        run("ip", "netns", "add", self.ns("k"))
+        self.created.append(self.ns("k"))
+        self.execute("k", "ip", "link", "set", "lo", "up")
+        self.link("s", "k", 6)
+        self.link("r", "k", 7)
 
     def cleanup(self):
         errors = []
