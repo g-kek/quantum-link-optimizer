@@ -1,17 +1,3 @@
-import json
-import time
+from quantum_link_optimizer.telemetry_lab.events import EventLog as Journal
 
-
-class Journal:
-    def __init__(self, path):
-        self.file = path.open("x")
-
-    def emit(self, event, **fields):
-        self.file.write(
-            json.dumps({"event": event, "time_ns": time.monotonic_ns(), **fields})
-            + "\n"
-        )
-        self.file.flush()
-
-    def close(self):
-        self.file.close()
+__all__ = ["Journal"]

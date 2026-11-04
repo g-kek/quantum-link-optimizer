@@ -15,6 +15,10 @@ def load_config(path):
             raise ValueError(f"{key} must be numeric")
         if not math.isfinite(value) or value <= 0:
             raise ValueError(f"{key} must be positive and finite")
+    if "seed" in config and (
+        type(config["seed"]) is not int or not 0 <= config["seed"] < 2**32
+    ):
+        raise ValueError("seed must be an unsigned 32-bit integer")
     for branch in ("A", "B"):
         for direction in ("forward", "reverse"):
             validate_link(config["paths"][branch][direction])
@@ -62,5 +66,7 @@ def validate_link(link):
             raise ValueError(f"{key} must be positive")
         if key == "limit" and not isinstance(value, int):
             raise ValueError("limit must be an integer")
+    if link.get("jitter_ms") and not link.get("delay_ms"):
+        raise ValueError("jitter requires delay_ms")
     if link.get("reorder_pct") and not link.get("delay_ms"):
         raise ValueError("reordering requires delay_ms")

@@ -12,6 +12,7 @@ class Service:
         self.pending = 0
         self.worker = asyncio.Lock()
         self.online = True
+        self.connections = set()
 
     def control(self, *, online=None, refilling=None):
         self.pools.refresh()

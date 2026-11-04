@@ -31,9 +31,31 @@ async def handle(reader, writer, service):
         await writer.wait_closed()
 
 
+async def close_clients(service):
+    tasks = list(service.connections)
+    for task in tasks:
+        task.cancel()
+    await asyncio.gather(*tasks, return_exceptions=True)
+
+
 async def start_server(service, host="127.0.0.1", port=9400):
+    async def tracked(reader, writer):
+        task = asyncio.current_task()
+        if len(service.connections) >= service.settings.queue_limit + 2:
+            writer.close()
+            await writer.wait_closed()
+            return
+        service.connections.add(task)
+        try:
+            await handle(reader, writer, service)
+        except (ConnectionError, asyncio.CancelledError):
+            writer.close()
+        finally:
+            writer.close()
+            service.connections.discard(task)
+
     return await asyncio.start_server(
-        lambda reader, writer: handle(reader, writer, service),
+        tracked,
         host,
         port,
         limit=8192,
@@ -58,7 +80,7 @@ class Client:
                 finally:
                     writer.close()
                     await writer.wait_closed()
-        except (OSError, TimeoutError) as error:
+        except (OSError, TimeoutError, ValueError) as error:
             raise KmsError("api_unavailable") from error
         if "error" in response:
             raise KmsError(response["error"])

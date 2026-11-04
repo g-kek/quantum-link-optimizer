@@ -1,0 +1,28 @@
+{
+  "split": "final_test",
+  "seed": 1007,
+  "path": "A",
+  "count": 35,
+  "interval_s": 0.007,
+  "deadline_s": 1,
+  "rotate_after": 3,
+  "queue_limit": 32,
+  "kms": {
+    "capacity": 16,
+    "initial": 16,
+    "refill_per_s": 1,
+    "delay_s": 0,
+    "mode": "shared"
+  },
+  "network": {
+    "forward": {
+      "delay_ms": 25,
+      "loss_pct": 12
+    },
+    "reverse": {
+      "delay_ms": 50,
+      "loss_pct": 5
+    }
+  },
+  "events": []
+}

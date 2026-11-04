@@ -19,7 +19,9 @@ def address(value):
 
 async def launch(args):
     loop = asyncio.get_running_loop()
-    journal = Journal(args.events)
+    journal = Journal(
+        args.events, source="sender" if args.role == "send" else "receiver"
+    )
     adapter = Client(*address(args.kms))
     agents = []
     store = None

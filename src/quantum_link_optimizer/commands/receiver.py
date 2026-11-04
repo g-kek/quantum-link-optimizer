@@ -64,6 +64,8 @@ class Receiver(asyncio.DatagramProtocol):
                     session=key.session,
                     path=self.path,
                     received_ns=received,
+                    key_id=key_id,
+                    attempt=header["attempt"],
                 )
                 result = self.store.execute(key.session, body)
                 self.emit(
@@ -77,16 +79,24 @@ class Receiver(asyncio.DatagramProtocol):
                     self.drop_acks -= 1
                     self.emit("ack_omitted", command_id=body["id"], path=self.path)
                 else:
-                    self.transport.sendto(seal(key, "ack", result), address)
+                    self.transport.sendto(
+                        seal(key, "ack", {**result, "attempt": header["attempt"]}),
+                        address,
+                    )
                     self.emit(
                         "ack_sent",
                         command_id=body["id"],
                         path=self.path,
                         session=key.session,
+                        attempt=header["attempt"],
                     )
             except (ValueError, KeyError, TypeError, InvalidTag, KmsError) as error:
                 self.emit(
-                    "receiver_rejected", path=self.path, reason=type(error).__name__
+                    "receiver_rejected",
+                    path=self.path,
+                    reason=str(error)
+                    if isinstance(error, KmsError)
+                    else type(error).__name__,
                 )
             finally:
                 self.queue.task_done()

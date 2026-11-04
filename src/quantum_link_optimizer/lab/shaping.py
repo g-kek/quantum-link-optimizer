@@ -1,4 +1,4 @@
-def apply_link(topology, point, settings):
+def apply_link(topology, point, settings, seed=None):
     node, device = point
     parent = ["root"]
     if settings.get("rate_mbit"):
@@ -39,6 +39,8 @@ def apply_link(topology, point, settings):
     for field, option in (("loss_pct", "loss"), ("reorder_pct", "reorder")):
         if settings.get(field):
             args += [option, f"{settings[field]}%"]
+    if seed is not None:
+        args += ["seed", str(seed)]
     topology.execute(node, *args)
 
 
@@ -48,6 +50,12 @@ def configure(topology, config):
         links["shared"] = config.get("shared", {})
     for name, directions in links.items():
         for index, direction in enumerate(("forward", "reverse")):
+            seed = config.get("seed")
+            if seed is not None:
+                seed = (seed + {"A": 0, "B": 2, "shared": 4}[name] + index) % 2**32
             apply_link(
-                topology, topology.points[name][index], directions.get(direction, {})
+                topology,
+                topology.points[name][index],
+                directions.get(direction, {}),
+                seed,
             )

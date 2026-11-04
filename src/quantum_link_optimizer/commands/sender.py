@@ -83,11 +83,20 @@ class Sender(asyncio.DatagramProtocol):
                 if not future.done():
                     future.set_result({"id": body["id"], **result})
             except (ValueError, KmsError, TimeoutError) as error:
-                status = "kms_error" if isinstance(error, KmsError) else "timeout"
+                status = (
+                    "kms_error"
+                    if isinstance(error, KmsError)
+                    else "invalid_command"
+                    if isinstance(error, ValueError)
+                    else "timeout"
+                )
                 self.emit(
                     "command_completed",
                     command_id=body["id"],
                     status=status,
+                    reason=str(error)
+                    if isinstance(error, KmsError)
+                    else type(error).__name__,
                     session=self.session.id,
                     path=self.session.path,
                     elapsed_ns=time.monotonic_ns() - started,
@@ -106,6 +115,13 @@ class Sender(asyncio.DatagramProtocol):
         if remaining <= 0:
             return {"status": "expired_before_send"}
         key_started = time.monotonic_ns()
+        self.emit(
+            "key_wait_started",
+            session=self.session.id,
+            path=self.session.path,
+            command_id=body["id"],
+            phase=self.session.phase(),
+        )
         key, phase = await self.session.acquire(remaining)
         self.emit(
             "session_ready",
@@ -113,6 +129,7 @@ class Sender(asyncio.DatagramProtocol):
             path=self.session.path,
             command_id=body["id"],
             phase=phase,
+            key_id=key.key_id,
             key_wait_ns=time.monotonic_ns() - key_started,
         )
         ack = asyncio.get_running_loop().create_future()
@@ -120,7 +137,9 @@ class Sender(asyncio.DatagramProtocol):
         attempt = 0
         while (remaining := (body["deadline_ns"] - time.monotonic_ns()) / 1e9) > 0:
             attempt += 1
-            self.transport.sendto(seal(key, "command", body), self.remote)
+            self.transport.sendto(
+                seal(key, "command", body, attempt=attempt), self.remote
+            )
             sent = time.monotonic_ns()
             self.emit(
                 "attempt_sent",
@@ -128,6 +147,7 @@ class Sender(asyncio.DatagramProtocol):
                 session=self.session.id,
                 path=self.session.path,
                 attempt=attempt,
+                key_id=key.key_id,
                 sent_ns=sent,
             )
             try:
@@ -141,7 +161,9 @@ class Sender(asyncio.DatagramProtocol):
                     session=self.session.id,
                     path=self.session.path,
                     attempt=attempt,
-                    rtt_ns=received - sent if attempt == 1 else None,
+                    rtt_ns=received - sent
+                    if result.get("attempt") == attempt
+                    else None,
                 )
                 return {k: v for k, v in result.items() if k != "id"} | {
                     "timely": received <= body["deadline_ns"],

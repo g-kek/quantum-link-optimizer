@@ -67,3 +67,34 @@ def test_cleanup_after_setup_failure(tmp_path, monkeypatch):
     manifest = json.loads((output / "manifest.json").read_text())
     assert manifest["status"] == "failed"
     assert not manifest["cleanup_errors"]
+
+
+def test_command_agents_and_hashes(tmp_path):
+    from quantum_link_optimizer.telemetry_lab.manifest import verify_files
+
+    config = {
+        "name": "commands",
+        "topology": "independent",
+        "duration_s": 2,
+        "interval_s": 0.1,
+        "paths": {
+            branch: {
+                direction: {"delay_ms": 10} for direction in ("forward", "reverse")
+            }
+            for branch in ("A", "B")
+        },
+        "commands": {
+            "path": "A",
+            "count": 3,
+            "deadline_s": 0.5,
+            "kms_config": "lab/kms/normal.json",
+        },
+    }
+    output = tmp_path / "commands"
+    run_scenario(config, output)
+    summary = json.loads((output / "summary.json").read_text())
+    assert summary["timely_executed"] == 3
+    assert all(verify_files(output).values())
+    assert not run(
+        "tcpdump", "-nn", "-r", output / "s.pcap", "tcp", "port", "9400"
+    ).strip()

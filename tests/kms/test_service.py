@@ -92,3 +92,31 @@ def test_cancelled_wait_does_not_leak_queue_slot():
         assert service.pending == 0
 
     asyncio.run(exercise())
+
+
+def test_shutdown_cancels_waiting_api_requests():
+    from quantum_link_optimizer.kms.api import close_clients
+
+    async def exercise():
+        service = Service(Settings(initial=0, refill_per_s=0))
+        server = await start_server(service, port=0)
+        client = Client(port=server.sockets[0].getsockname()[1])
+        request = asyncio.create_task(client.request("issue", session="s", timeout_s=5))
+        try:
+            for _ in range(100):
+                if service.pending:
+                    break
+                await asyncio.sleep(0.001)
+            assert service.pending == 1
+            server.close()
+            await server.wait_closed()
+            await close_clients(service)
+            assert service.pending == 0
+            assert not service.connections
+            with pytest.raises(KmsError):
+                await request
+        finally:
+            request.cancel()
+            await asyncio.gather(request, return_exceptions=True)
+
+    asyncio.run(exercise())

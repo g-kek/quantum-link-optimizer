@@ -23,9 +23,10 @@ def cipher(key, kind):
     return ChaCha20Poly1305(material)
 
 
-def seal(key, kind, body):
+def seal(key, kind, body, attempt=0):
     header = {
         "v": 1,
+        "attempt": attempt,
         "kind": kind,
         "key_id": key.key_id,
         "session": key.session,
@@ -50,10 +51,12 @@ def inspect(packet, kind):
         raise ValueError("oversized datagram")
     envelope = json.loads(packet)
     header = envelope["header"]
-    if set(header) != {"v", "kind", "key_id", "session", "path"}:
+    if set(header) != {"v", "kind", "key_id", "session", "path", "attempt"}:
         raise ValueError("invalid header")
     if header["v"] != 1 or header["kind"] != kind or header["path"] not in {"A", "B"}:
         raise ValueError("invalid protocol or path")
+    if type(header["attempt"]) is not int or header["attempt"] < 0:
+        raise ValueError("invalid attempt")
     for name in ("session", "key_id"):
         if not isinstance(header[name], str) or not 1 <= len(header[name]) <= 128:
             raise ValueError("invalid identifier")

@@ -5,6 +5,10 @@ import time
 import uuid
 from datetime import UTC, datetime
 
+from quantum_link_optimizer.telemetry_lab.linux import sample_namespace
+from quantum_link_optimizer.telemetry_lab.manifest import begin, finish
+from quantum_link_optimizer.telemetry_lab.report import summarize
+
 from .command_workload import CommandWorkload
 from .shaping import configure
 from .system import command, run, snapshot
@@ -23,12 +27,13 @@ def version(*args):
 
 
 def run_scenario(config, output):
-    output.mkdir(parents=True, exist_ok=False)
+    provenance = begin(output, config)
     token = uuid.uuid4().hex[:8]
     topology = Topology(token, config["topology"] == "shared")
     processes = []
     handles = []
     manifest = {
+        **provenance,
         "run_id": token,
         "started_utc": datetime.now(UTC).isoformat(),
         "platform": platform.platform(),
@@ -46,7 +51,7 @@ def run_scenario(config, output):
             }.items()
         },
         "status": "running",
-        "random_seed": None,
+        "random_seed": config.get("seed"),
     }
     write_json(output / "scenario.json", config)
     write_json(output / "manifest.json", manifest)
@@ -159,7 +164,7 @@ def run_scenario(config, output):
         started = time.monotonic()
         events = sorted(config.get("events", []), key=lambda event: event["at_s"])
         with (
-            (output / "events.jsonl").open("w") as event_log,
+            (output / "truth-network.jsonl").open("w") as event_log,
             (output / "queues.jsonl").open("w") as queues,
         ):
             while (elapsed := time.monotonic() - started) < config["duration_s"]:
@@ -190,10 +195,7 @@ def run_scenario(config, output):
                         json.dumps(
                             {
                                 "elapsed_s": time.monotonic() - started,
-                                "namespace": namespace,
-                                "qdisc": json.loads(
-                                    run("tc", "-s", "-j", "qdisc", namespace=namespace)
-                                ),
+                                **sample_namespace(namespace),
                             }
                         )
                         + "\n"
@@ -225,4 +227,6 @@ def run_scenario(config, output):
             handle.close()
         manifest["cleanup_errors"] = topology.cleanup()
         manifest["finished_utc"] = datetime.now(UTC).isoformat()
-        write_json(output / "manifest.json", manifest)
+        if (output / "sender.jsonl").exists():
+            summarize(output)
+        finish(output, manifest)

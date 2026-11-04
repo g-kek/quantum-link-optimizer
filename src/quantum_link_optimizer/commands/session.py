@@ -22,16 +22,21 @@ class Session:
         self.used = 0
         self.issued_at = 0
 
-    async def acquire(self, timeout_s):
+    def phase(self):
         now = time.monotonic()
-        phase = "steady"
+        if self.key is None:
+            return "startup"
         if (
-            self.key is None
-            or self.used >= self.rotate_after
+            self.used >= self.rotate_after
             or now - self.issued_at >= self.rotate_s
             or now >= self.key.expires_at
         ):
-            phase = "startup" if self.key is None else "rotation"
+            return "rotation"
+        return "steady"
+
+    async def acquire(self, timeout_s):
+        phase = self.phase()
+        if phase != "steady":
             self.key = await self.adapter.request(
                 "issue",
                 session=self.id,
