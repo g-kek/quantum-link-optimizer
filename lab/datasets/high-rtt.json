@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "duration_s": 600,
+  "base": {
+    "command_every": 10,
+    "queue_limit": 64,
+    "probe_limit": 64,
+    "rotate_after": 30,
+    "probe_timeout_s": 2,
+    "command_deadline_s": 2,
+    "target_ms": 100,
+    "max_age_ms": 2000,
+    "kms": {
+      "mode": "shared",
+      "capacity": 32,
+      "initial": 16,
+      "refill_per_s": 2,
+      "delay_s": 0,
+      "key_ttl_s": 120
+    }
+  },
+  "profiles": [
+    "recoverable-700",
+    "swap-700",
+    "common-700",
+    "reverse-700",
+    "slow-kms",
+    "loss-a"
+  ],
+  "splits": {
+    "train": {
+      "seeds": [
+        11,
+        12,
+        13
+      ],
+      "intervals_s": [
+        0.1,
+        0.2
+      ]
+    },
+    "validation": {
+      "seeds": [
+        101,
+        102
+      ],
+      "intervals_s": [
+        0.15
+      ]
+    },
+    "final_test": {
+      "seeds": [
+        1001,
+        1002
+      ],
+      "intervals_s": [
+        0.08,
+        0.25
+      ]
+    }
+  }
+}

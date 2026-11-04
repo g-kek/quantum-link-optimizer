@@ -1,0 +1,26 @@
+{
+  "name": "long-ping-common-700",
+  "topology": "independent",
+  "duration_s": 600,
+  "interval_s": 1,
+  "paths": {
+    "A": {
+      "forward": {
+        "delay_ms": 350
+      },
+      "reverse": {
+        "delay_ms": 350
+      }
+    },
+    "B": {
+      "forward": {
+        "delay_ms": 350
+      },
+      "reverse": {
+        "delay_ms": 350
+      }
+    }
+  },
+  "events": [],
+  "background": []
+}
