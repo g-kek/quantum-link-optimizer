@@ -110,3 +110,8 @@ duplicate executions, байты и `keys_delivered` / `key_policy_uses`.
 
 Механизмы для сопоставления: [gRPC hedging](https://grpc.io/docs/guides/request-hedging/),
 [FQ-CoDel](https://www.man7.org/linux/man-pages/man8/tc-fq_codel.8.html).
+
+Проверено: macOS — 157 тестов, 6 Linux-only пропусков; Ruff и wheel прошли.
+В [Linux CI](https://github.com/g-kek/quantum-link-optimizer/actions/runs/42096525539)
+с root прошли все 31 тест из `tests/lab`, включая реальные маршруты,
+FQ-CoDel и онлайн-отправитель. Короткий `smoke.json` также выполнен после коммита.

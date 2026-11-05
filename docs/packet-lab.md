@@ -95,19 +95,18 @@ Commit с `dirty` не восстанавливает незакоммиченн
 Документация: [netem](https://man7.org/linux/man-pages/man8/tc-netem.8.html),
 [Lima](https://lima-vm.io/docs/usage/).
 
-## Состояние проверки — 2026-11-04
+## Состояние проверки
 
-Локальные тесты и Ruff пройдены на macOS. Linux-интеграционные тесты проверяют
-обе топологии, прибавку RTT, разделение ветвей по PCAP и очистку после ошибки.
-Они пока не выполнены: загрузка Ubuntu через Lima завершилась ошибкой
-`no space left on device`. На MacBook осталось около 463 МиБ.
-Перед Linux-прогоном нужно освободить место под образ, диск VM и PCAP.
-Lima установлена; VM `qkd-lab` создана, но ещё не запущена.
+В [Linux CI](https://github.com/g-kek/quantum-link-optimizer/actions/runs/42096525539)
+с root выполнен 31 тест из `tests/lab`: обе топологии, RTT, маршруты по PCAP,
+AEAD-команды, онлайн-выбор B, общий FQ-CoDel и очистка при ошибке.
+Локальный запуск Lima на MacBook пока не подтверждён; прежняя загрузка Ubuntu
+прерывалась из-за нехватки диска. CI проверяет Linux-механику отдельно от VM.
 
 В подготовленной Linux VM интеграционные тесты запускаются из корня репозитория:
 
 ```bash
-sudo apt-get install -y python3-pytest
+sudo apt-get install -y python3-pytest python3-cryptography
 sudo env PYTHONPATH=src python3 -m pytest -q tests/lab
 ```
 
