@@ -1,4 +1,5 @@
 import asyncio
+import uuid
 from contextlib import ExitStack
 
 from quantum_link_optimizer.commands.store import Store
@@ -17,7 +18,7 @@ async def collect_episode(config, output):
     manifest.update(
         episode_id=config["episode_id"],
         backend="loopback",
-        topology="parallel A/B UDP probes and fixed-path AEAD commands",
+        topology="parallel A/B UDP probes and AEAD commands",
         data_origin="laboratory_packets",
         capture=None,
         assumptions=config.get("incidents", {}).get("assumptions", []),
@@ -29,6 +30,8 @@ async def collect_episode(config, output):
     store = None
     failure = None
     incidents = None
+    router = None
+    logical_session = uuid.uuid4().hex
     with ExitStack() as stack:
         logs = {}
         for name in ("sender", "receiver", "kms", "samples", "truth"):
@@ -40,6 +43,15 @@ async def collect_episode(config, output):
             if fields.get("command_id") in command_samples:
                 fields["sample"] = command_samples[fields["command_id"]]
             logs["sender"].emit(event, **fields)
+            if router:
+                router.observe(event, **fields)
+
+        def leg_emit(event, **fields):
+            names = {
+                "command_submitted": "leg_submitted",
+                "command_completed": "leg_completed",
+            }
+            emit(names.get(event, event), **fields)
 
         try:
             service = Service(Settings(**config["kms"]), logs["kms"].emit)
@@ -63,10 +75,23 @@ async def collect_episode(config, output):
                     config,
                     adapter,
                     store,
-                    emit,
+                    leg_emit if "routing" in config else emit,
                     logs["receiver"].emit,
                     resources,
                     device=incidents.devices[path] if incidents else None,
+                    logical_session=logical_session,
+                )
+            if "routing" in config:
+                from quantum_link_optimizer.selection.config import (
+                    Settings as RoutingSettings,
+                )
+                from quantum_link_optimizer.selection.router import Router
+
+                router = Router(
+                    {path: item[0] for path, item in paths.items()},
+                    RoutingSettings(**config["routing"]),
+                    emit,
+                    allow_copy=config.get("allow_copy", False),
                 )
             logs["truth"].emit(
                 "initial_conditions", paths=config["network"], profile=config["profile"]
@@ -95,20 +120,23 @@ async def collect_episode(config, output):
                         path=path,
                         queue_depth=paths[path][0].queue.qsize(),
                     )
+                command_due = (
+                    sample >= config.get("warmup_samples", 0)
+                    and sample % config["command_every"] == 0
+                )
                 selected = (
-                    config["fixed_path"]
-                    if sample % config["command_every"] == 0
-                    else None
+                    config["fixed_path"] if command_due and router is None else None
                 )
                 emit("decision", sample=sample, selected_path=selected)
                 for path in ("A", "B"):
                     paths[path][1].send(sample)
-                if selected:
+                if command_due:
                     command_id = f"command-{sample}"
                     command_samples[command_id] = sample
+                    sender = router if router else paths[selected][0]
                     tasks.append(
                         asyncio.create_task(
-                            paths[selected][0].send(
+                            sender.send(
                                 sample,
                                 sample,
                                 config["command_deadline_s"],
@@ -137,6 +165,8 @@ async def collect_episode(config, output):
             for task in tasks:
                 task.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)
+            if router:
+                await router.close()
             for probe in resources["probes"]:
                 probe.close()
             for agent in reversed(resources["agents"]):
@@ -151,6 +181,10 @@ async def collect_episode(config, output):
                 await close_clients(service)
             if store:
                 store.close()
+    if router and manifest["status"] == "collected":
+        from quantum_link_optimizer.selection.report import report
+
+        report(output, router.settings.target_ms)
     finish(output, manifest)
     if failure:
         raise failure

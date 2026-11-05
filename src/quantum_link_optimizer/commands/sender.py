@@ -19,6 +19,8 @@ class Sender(asyncio.DatagramProtocol):
         self.queue = asyncio.Queue(maxsize=queue_limit)
         self.retry_s = retry_s
         self.pending = None
+        self.active_future = None
+        self.active_work = None
         self.worker = None
         self.transport = None
 
@@ -48,7 +50,7 @@ class Sender(asyncio.DatagramProtocol):
             create(value, sequence, deadline_s, command_id), started
         )
 
-    async def submit(self, body, started_ns=None):
+    async def submit(self, body, started_ns=None, reserve=None, max_attempts=None):
         validate(body)
         body = dict(body)
         started = started_ns if started_ns is not None else time.monotonic_ns()
@@ -61,7 +63,7 @@ class Sender(asyncio.DatagramProtocol):
             deadline_ns=body["deadline_ns"],
         )
         try:
-            self.queue.put_nowait((body, started, future))
+            self.queue.put_nowait((body, started, future, reserve, max_attempts))
         except asyncio.QueueFull:
             self.emit(
                 "command_completed",
@@ -71,13 +73,33 @@ class Sender(asyncio.DatagramProtocol):
                 session=self.session.id,
             )
             return {"id": body["id"], "status": "queue_full"}
-        return await future
+        try:
+            return await future
+        except asyncio.CancelledError:
+            if self.active_future is future and self.active_work:
+                work = self.active_work
+                work.cancel()
+                await asyncio.gather(work, return_exceptions=True)
+            raise
 
     async def process(self):
         while True:
-            body, started, future = await self.queue.get()
+            body, started, future, reserve, max_attempts = await self.queue.get()
+            work = None
+
+            cancel_work = None
             try:
-                result = await self.execute(body)
+                if future.cancelled():
+                    continue
+                work = asyncio.create_task(self.execute(body, reserve, max_attempts))
+                self.active_future, self.active_work = future, work
+
+                def cancel_work(completed, work=work):
+                    if completed.cancelled():
+                        work.cancel()
+
+                future.add_done_callback(cancel_work)
+                result = await work
                 self.emit(
                     "command_completed",
                     command_id=body["id"],
@@ -111,12 +133,20 @@ class Sender(asyncio.DatagramProtocol):
                     future.set_result({"id": body["id"], "status": status})
             except asyncio.CancelledError:
                 future.cancel()
-                raise
+                if asyncio.current_task().cancelling():
+                    raise
+                self.emit(
+                    "leg_abandoned", command_id=body["id"], path=self.session.path
+                )
+
             finally:
+                if cancel_work:
+                    future.remove_done_callback(cancel_work)
+                self.active_future, self.active_work = None, None
                 self.pending = None
                 self.queue.task_done()
 
-    async def execute(self, body):
+    async def execute(self, body, reserve=None, max_attempts=None):
         remaining = (body["deadline_ns"] - time.monotonic_ns()) / 1e9
         if remaining <= 0:
             return {"status": "expired_before_send"}
@@ -142,27 +172,39 @@ class Sender(asyncio.DatagramProtocol):
         self.pending = key, body, ack
         attempt = 0
         while (remaining := (body["deadline_ns"] - time.monotonic_ns()) / 1e9) > 0:
-            attempt += 1
-            self.transport.sendto(
-                seal(key, "command", body, attempt=attempt), self.remote
-            )
-            sent = time.monotonic_ns()
-            self.emit(
-                "attempt_sent",
-                command_id=body["id"],
-                session=self.session.id,
-                path=self.session.path,
-                attempt=attempt,
-                key_id=key.key_id,
-                sent_ns=sent,
-            )
-            try:
-                result = await asyncio.wait_for(
-                    asyncio.shield(ack), min(remaining, self.retry_s)
+            can_send = max_attempts is None or attempt < max_attempts
+            if can_send:
+                packet = seal(key, "command", body, attempt=attempt + 1)
+                can_send = reserve is None or reserve(len(packet) + 28)
+            if can_send:
+                attempt += 1
+                self.transport.sendto(packet, self.remote)
+                sent = time.monotonic_ns()
+                self.emit(
+                    "attempt_sent",
+                    command_id=body["id"],
+                    session=self.session.id,
+                    path=self.session.path,
+                    attempt=attempt,
+                    key_id=key.key_id,
+                    sent_ns=sent,
+                    wire_bytes=len(packet) + 28,
                 )
+            elif attempt == 0:
+                return {
+                    "status": "budget_rejected",
+                    "outcome": "not_sent",
+                    "phase": phase,
+                }
+            wait_s = min(remaining, self.retry_s) if can_send else remaining
+            try:
+                result = await asyncio.wait_for(asyncio.shield(ack), wait_s)
                 received = time.monotonic_ns()
                 self.emit(
                     "ack_received",
+                    receiver_queue_wait_ns=result.get("receiver_queue_wait_ns"),
+                    receiver_key_wait_ns=result.get("receiver_key_wait_ns"),
+                    receiver_processing_ns=result.get("receiver_processing_ns"),
                     command_id=body["id"],
                     session=self.session.id,
                     path=self.session.path,
@@ -184,6 +226,6 @@ class Sender(asyncio.DatagramProtocol):
         self.worker.cancel()
         await asyncio.gather(self.worker, return_exceptions=True)
         while not self.queue.empty():
-            _, _, future = self.queue.get_nowait()
+            _, _, future, _, _ = self.queue.get_nowait()
             future.cancel()
             self.queue.task_done()

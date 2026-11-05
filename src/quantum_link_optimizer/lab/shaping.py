@@ -21,6 +21,20 @@ def apply_link(topology, point, settings, seed=None):
             "128kb",
         )
         parent = ["parent", "1:1", "handle", "10:"]
+    if settings.get("queue_discipline") == "fq_codel":
+        topology.execute(
+            node,
+            "tc",
+            "qdisc",
+            "replace",
+            "dev",
+            device,
+            *parent,
+            "fq_codel",
+            "limit",
+            str(settings.get("limit", 1000)),
+        )
+        return
     args = [
         "tc",
         "qdisc",

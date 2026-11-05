@@ -1,0 +1,87 @@
+{
+  "dataset": {
+    "schema_version": 1,
+    "duration_s": 2,
+    "base": {
+      "command_every": 5,
+      "queue_limit": 64,
+      "probe_limit": 64,
+      "rotate_after": 30,
+      "probe_timeout_s": 2,
+      "command_deadline_s": 2,
+      "target_ms": 100,
+      "max_age_ms": 500,
+      "kms": {
+        "mode": "shared",
+        "capacity": 32,
+        "initial": 16,
+        "refill_per_s": 2,
+        "delay_s": 0,
+        "key_ttl_s": 120
+      }
+    },
+    "profiles": [
+      "equipment-shared-rate"
+    ],
+    "splits": {
+      "train": {
+        "seeds": [
+          11
+        ],
+        "intervals_s": [
+          0.05
+        ]
+      },
+      "validation": {
+        "seeds": [
+          101
+        ],
+        "intervals_s": [
+          0.08
+        ]
+      },
+      "final_test": {
+        "seeds": [
+          1001
+        ],
+        "intervals_s": [
+          0.1
+        ]
+      }
+    }
+  },
+  "warmup_samples": 4,
+  "policies": [
+    {
+      "name": "ewma",
+      "settings": {
+        "mode": "ewma",
+        "min_hold_ms": 100,
+        "switch_margin_ms": 10,
+        "shared_segment": true
+      }
+    },
+    {
+      "name": "ewma-paced",
+      "settings": {
+        "mode": "ewma",
+        "min_hold_ms": 100,
+        "switch_margin_ms": 10,
+        "pacing_per_s": 1,
+        "shared_segment": true
+      }
+    },
+    {
+      "name": "ewma-hedged",
+      "allow_copy": true,
+      "settings": {
+        "mode": "ewma",
+        "min_hold_ms": 100,
+        "hedge_delay_ms": 40,
+        "extra_bytes_per_command": 1200,
+        "extra_bytes_total": 4800,
+        "shared_segment": true
+      }
+    }
+  ]
+}

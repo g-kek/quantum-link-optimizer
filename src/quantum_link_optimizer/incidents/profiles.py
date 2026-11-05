@@ -3,6 +3,7 @@ from . import clock, device
 NAMES = {
     "equipment-gradual-a",
     "equipment-rate-a",
+    "equipment-shared-rate",
     "equipment-outage-a",
     "equipment-shared-outage",
     "bc-holdover-a",
@@ -50,8 +51,12 @@ def profile(name, samples):
                     "A": {"processing_delay_ms": delay, "temperature_c": temperature}
                 },
             )
-    elif name == "equipment-rate-a":
-        add(0.25, devices={"A": {"rate_mbit": 0.002, "queue_limit_bytes": 1024}})
+    elif name in {"equipment-rate-a", "equipment-shared-rate"}:
+        rate = 0.002
+        if name == "equipment-shared-rate":
+            spec["device_scope"] = "shared"
+            rate = 0.02
+        add(0.25, devices={"A": {"rate_mbit": rate, "queue_limit_bytes": 1024}})
         add(0.75, devices={"A": {"rate_mbit": 100}})
     elif name in {"equipment-outage-a", "equipment-shared-outage"}:
         if name == "equipment-shared-outage":

@@ -45,13 +45,33 @@ def load_config(path):
             raise ValueError("command count must be positive")
         if not isinstance(commands["kms_config"], str):
             raise ValueError("kms_config must be a path")
+        if "routing" in commands:
+            from quantum_link_optimizer.selection.config import Settings
+
+            Settings(**commands["routing"])
         duration = commands["count"] * commands.get("interval_s", 0.02)
+        duration += commands.get("warmup_s", 0.2) if "routing" in commands else 0
         if duration + commands.get("deadline_s", 1) > config["duration_s"]:
             raise ValueError("command workload exceeds measurement window")
     return config
 
 
 def validate_link(link):
+    settings = dict(link)
+    discipline = settings.pop("queue_discipline", "fifo")
+    if discipline not in {"fifo", "fq_codel"}:
+        raise ValueError("unknown queue discipline")
+    if discipline == "fq_codel" and (
+        not settings.get("rate_mbit")
+        or any(
+            settings.get(name)
+            for name in ("delay_ms", "jitter_ms", "loss_pct", "reorder_pct")
+        )
+    ):
+        raise ValueError(
+            "fq_codel requires a rate-only segment; put netem on a separate interface"
+        )
+    link = settings
     allowed = {"delay_ms", "jitter_ms", "loss_pct", "reorder_pct", "rate_mbit", "limit"}
     if set(link) - allowed:
         raise ValueError("unknown link setting")

@@ -36,11 +36,13 @@ class Receiver(asyncio.DatagramProtocol):
     async def process(self):
         while True:
             packet, address, received = await self.queue.get()
+            dequeued = time.monotonic_ns()
             try:
                 envelope = inspect(packet, "command")
                 header = envelope["header"]
                 if header["path"] != self.path:
                     raise ValueError("wrong path")
+                key_started = time.monotonic_ns()
                 key_id = header["key_id"]
                 key = self.cache.get(key_id)
                 if key is None or key.expires_at <= time.monotonic():
@@ -58,6 +60,8 @@ class Receiver(asyncio.DatagramProtocol):
                     if len(self.cache) >= 128:
                         self.cache.pop(next(iter(self.cache)))
                     self.cache[key_id] = key
+                key_wait = time.monotonic_ns() - key_started
+                processing_started = time.monotonic_ns()
                 body = unseal(key, envelope, "command")
                 self.emit(
                     "command_received",
@@ -70,6 +74,12 @@ class Receiver(asyncio.DatagramProtocol):
                 )
                 logical_id = logical_session(key.session, self.path)
                 result = self.store.execute(logical_id, body)
+                result = {
+                    **result,
+                    "receiver_queue_wait_ns": dequeued - received,
+                    "receiver_key_wait_ns": key_wait,
+                    "receiver_processing_ns": time.monotonic_ns() - processing_started,
+                }
                 self.emit(
                     "command_result",
                     logical_session=logical_id,

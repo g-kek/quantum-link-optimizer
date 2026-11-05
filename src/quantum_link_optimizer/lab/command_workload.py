@@ -70,6 +70,8 @@ class CommandWorkload:
             time.sleep(0.05)
 
     def start_sender(self):
+        if "routing" in self.config:
+            return self.start_online()
         index = 1 if self.config["path"] == "A" else 2
         self.sender = self.spawn(
             "sender.log",
@@ -96,6 +98,62 @@ class CommandWorkload:
             str(self.config.get("deadline_s", 1)),
             "--rotate-after",
             str(self.config.get("rotate_after", 64)),
+        )
+
+    def start_online(self):
+        ready = self.output / "probes.ready"
+        self.services.append(
+            self.spawn(
+                "probe-server.log",
+                self.topology.ns("r"),
+                sys.executable,
+                "-m",
+                "quantum_link_optimizer.selection.agent",
+                "probes",
+                "--a",
+                "10.250.1.1:9601",
+                "--b",
+                "10.250.1.2:9602",
+                "--ready",
+                ready,
+            )
+        )
+        deadline = time.monotonic() + 5
+        while not ready.exists():
+            if time.monotonic() > deadline or self.services[-1].poll() is not None:
+                raise RuntimeError("probe server failed to start")
+            time.sleep(0.02)
+        config = {
+            "kms": ["10.240.6.2", 9400],
+            "routing": self.config["routing"],
+            "rotate_after": self.config.get("rotate_after", 64),
+            "count": self.config["count"],
+            "interval_s": self.config.get("interval_s", 0.2),
+            "deadline_s": self.config.get("deadline_s", 1),
+            "warmup_s": self.config.get("warmup_s", 0.2),
+            "allow_copy": self.config.get("allow_copy", False),
+            "paths": {
+                path: {
+                    "local": [f"10.250.0.{index}", 0],
+                    "remote": [f"10.250.1.{index}", 9500 + index],
+                    "probe": [f"10.250.1.{index}", 9600 + index],
+                }
+                for index, path in enumerate(("A", "B"), 1)
+            },
+        }
+        path = self.output / "online-config.json"
+        path.write_text(json.dumps(config, indent=2) + "\n")
+        self.sender = self.spawn(
+            "sender.log",
+            self.topology.ns("s"),
+            sys.executable,
+            "-m",
+            "quantum_link_optimizer.selection.agent",
+            "send",
+            "--config",
+            path,
+            "--events",
+            self.output / "sender.jsonl",
         )
 
     def finish(self):

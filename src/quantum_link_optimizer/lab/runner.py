@@ -229,4 +229,8 @@ def run_scenario(config, output):
         manifest["finished_utc"] = datetime.now(UTC).isoformat()
         if (output / "sender.jsonl").exists():
             summarize(output)
+            if "routing" in config.get("commands", {}):
+                from quantum_link_optimizer.selection.report import report
+
+                report(output, config["commands"]["routing"].get("target_ms", 100))
         finish(output, manifest)

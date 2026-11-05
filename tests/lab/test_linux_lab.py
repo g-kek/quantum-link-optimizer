@@ -98,3 +98,38 @@ def test_command_agents_and_hashes(tmp_path):
     assert not run(
         "tcpdump", "-nn", "-r", output / "s.pcap", "tcp", "port", "9400"
     ).strip()
+
+
+def test_shared_fq_codel_is_a_real_rate_limited_qdisc(tmp_path):
+    from pathlib import Path
+
+    from quantum_link_optimizer.lab.config import load_config
+
+    config = load_config(Path("lab/scenarios/shared-fq-codel.json"))
+    config["duration_s"] = 2
+    output = tmp_path / "fq-codel"
+    run_scenario(config, output)
+    final = json.loads((output / "final.json").read_text())
+    common = next(value for name, value in final.items() if name.endswith("-c"))
+    kinds = {qdisc["kind"] for qdisc in common["queues"]}
+    assert {"tbf", "fq_codel"} <= kinds
+    assert not json.loads((output / "manifest.json").read_text())["cleanup_errors"]
+
+
+def test_online_controller_selects_actual_b_namespace_route(tmp_path):
+    from pathlib import Path
+
+    from quantum_link_optimizer.lab.config import load_config
+
+    config = load_config(Path("lab/scenarios/online-selection.json"))
+    config["duration_s"] = 3
+    config["commands"].update(count=3, interval_s=0.1)
+    output = tmp_path / "online"
+    run_scenario(config, output)
+    summary = json.loads((output / "routing-summary.json").read_text())
+    assert summary["executions"] == summary["offered"] == 3
+    assert summary["duplicate_executions"] == 0
+    assert run("tcpdump", "-nn", "-r", output / "b.pcap", "udp", "port", "9502").strip()
+    assert not run(
+        "tcpdump", "-nn", "-r", output / "a.pcap", "udp", "port", "9501"
+    ).strip()

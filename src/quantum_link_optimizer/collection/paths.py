@@ -7,7 +7,16 @@ from .probes import Echo, Probe
 
 
 async def open_path(
-    loop, path, config, adapter, store, sender_log, receiver_log, resources, device=None
+    loop,
+    path,
+    config,
+    adapter,
+    store,
+    sender_log,
+    receiver_log,
+    resources,
+    device=None,
+    logical_session=None,
 ):
     settings = config["network"][path]
     receiver = Receiver(
@@ -28,7 +37,12 @@ async def open_path(
     )
     resources["relays"].append(relay)
     sender = Sender(
-        Session(adapter, path, rotate_after=config["rotate_after"]),
+        Session(
+            adapter,
+            path,
+            rotate_after=config["rotate_after"],
+            session_id=logical_session,
+        ),
         proxy.get_extra_info("sockname"),
         sender_log,
         queue_limit=config["queue_limit"],
