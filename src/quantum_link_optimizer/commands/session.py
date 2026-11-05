@@ -4,6 +4,8 @@ from typing import Protocol
 
 from quantum_link_optimizer.kms.model import Key
 
+from .identity import transport_session
+
 
 class KeyAdapter(Protocol):
     async def request(self, operation: str, **fields) -> Key: ...
@@ -15,7 +17,8 @@ class Session:
             raise ValueError("invalid session policy")
         self.adapter = adapter
         self.path = path
-        self.id = session_id or uuid.uuid4().hex
+        self.logical_id = session_id or uuid.uuid4().hex
+        self.id = transport_session(self.logical_id, path)
         self.rotate_after = rotate_after
         self.rotate_s = rotate_s
         self.key = None

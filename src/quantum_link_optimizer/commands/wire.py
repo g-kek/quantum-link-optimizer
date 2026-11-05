@@ -18,14 +18,14 @@ def cipher(key, kind):
         algorithm=hashes.SHA256(),
         length=32,
         salt=None,
-        info=b"quant-link-lab-v1/" + kind.encode(),
+        info=b"quant-link-lab-v2/" + kind.encode(),
     ).derive(key.material)
     return ChaCha20Poly1305(material)
 
 
 def seal(key, kind, body, attempt=0):
     header = {
-        "v": 1,
+        "v": 2,
         "attempt": attempt,
         "kind": kind,
         "key_id": key.key_id,
@@ -53,7 +53,7 @@ def inspect(packet, kind):
     header = envelope["header"]
     if set(header) != {"v", "kind", "key_id", "session", "path", "attempt"}:
         raise ValueError("invalid header")
-    if header["v"] != 1 or header["kind"] != kind or header["path"] not in {"A", "B"}:
+    if header["v"] != 2 or header["kind"] != kind or header["path"] not in {"A", "B"}:
         raise ValueError("invalid protocol or path")
     if type(header["attempt"]) is not int or header["attempt"] < 0:
         raise ValueError("invalid attempt")

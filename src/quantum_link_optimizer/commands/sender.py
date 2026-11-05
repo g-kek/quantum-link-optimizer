@@ -1,11 +1,11 @@
 import asyncio
 import time
-import uuid
 
 from cryptography.exceptions import InvalidTag
 
 from quantum_link_optimizer.kms.model import KmsError
 
+from .message import create, fingerprint, validate
 from .wire import inspect, seal, unseal
 
 
@@ -32,7 +32,11 @@ class Sender(asyncio.DatagramProtocol):
         key, body, future = self.pending
         try:
             result = unseal(key, inspect(packet, "ack"), "ack")
-            if result["id"] != body["id"] or future.done():
+            if (
+                result["id"] != body["id"]
+                or result["request_hash"] != fingerprint(body)
+                or future.done()
+            ):
                 return
             future.set_result(result)
         except (ValueError, KeyError, TypeError, InvalidTag):
@@ -40,12 +44,14 @@ class Sender(asyncio.DatagramProtocol):
 
     async def send(self, value, sequence, deadline_s=1, command_id=None):
         started = time.monotonic_ns()
-        body = {
-            "id": command_id or uuid.uuid4().hex,
-            "sequence": sequence,
-            "value": value,
-            "deadline_ns": started + int(deadline_s * 1e9),
-        }
+        return await self.submit(
+            create(value, sequence, deadline_s, command_id), started
+        )
+
+    async def submit(self, body, started_ns=None):
+        validate(body)
+        body = dict(body)
+        started = started_ns if started_ns is not None else time.monotonic_ns()
         future = asyncio.get_running_loop().create_future()
         self.emit(
             "command_submitted",

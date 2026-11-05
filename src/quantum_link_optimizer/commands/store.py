@@ -1,7 +1,8 @@
-import hashlib
 import json
 import sqlite3
 import time
+
+from .message import fingerprint, validate
 
 
 class Store:
@@ -20,24 +21,22 @@ class Store:
         """)
 
     def execute(self, session, body):
-        required = {"id", "sequence", "value", "deadline_ns"}
-        if set(body) != required:
-            raise ValueError("invalid command fields")
-        if not isinstance(body["id"], str) or not 1 <= len(body["id"]) <= 128:
-            raise ValueError("invalid command ID")
-        for field in ("sequence", "value", "deadline_ns"):
-            if type(body[field]) is not int or not 0 <= body[field] < 2**63:
-                raise ValueError(f"invalid {field}")
-        digest = hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
+        validate(body)
+        digest = fingerprint(body)
         with self.db:
+            self.db.execute("BEGIN IMMEDIATE")
             row = self.db.execute(
                 "SELECT digest, result FROM commands WHERE session=? AND id=?",
                 (session, body["id"]),
             ).fetchone()
             if row:
                 if row[0] != digest:
-                    return {"id": body["id"], "status": "conflict"}
-                return {**json.loads(row[1]), "duplicate": True}
+                    return {
+                        "id": body["id"],
+                        "status": "conflict",
+                        "request_hash": digest,
+                    }
+                return {**json.loads(row[1]), "duplicate": True, "request_hash": digest}
             now = time.monotonic_ns()
             state = self.db.execute(
                 "SELECT sequence FROM state WHERE session=?", (session,)
@@ -56,6 +55,7 @@ class Store:
                 )
             result = {
                 "id": body["id"],
+                "request_hash": digest,
                 "status": status,
                 "duplicate": False,
                 "executed_ns": now if status == "executed" else None,

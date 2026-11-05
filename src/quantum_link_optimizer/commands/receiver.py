@@ -5,6 +5,7 @@ from cryptography.exceptions import InvalidTag
 
 from quantum_link_optimizer.kms.model import KmsError
 
+from .identity import logical_session
 from .wire import inspect, seal, unseal
 
 
@@ -67,9 +68,11 @@ class Receiver(asyncio.DatagramProtocol):
                     key_id=key_id,
                     attempt=header["attempt"],
                 )
-                result = self.store.execute(key.session, body)
+                logical_id = logical_session(key.session, self.path)
+                result = self.store.execute(logical_id, body)
                 self.emit(
                     "command_result",
+                    logical_session=logical_id,
                     session=key.session,
                     path=self.path,
                     command_id=body["id"],
