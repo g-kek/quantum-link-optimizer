@@ -4,12 +4,14 @@ on:
     paths:
       - 'src/quantum_link_optimizer/**'
       - 'tests/lab/**'
+      - 'tests/selection/**'
       - 'lab/scenarios/**'
       - '.github/workflows/network-lab.yml'
   pull_request:
     paths:
       - 'src/quantum_link_optimizer/**'
       - 'tests/lab/**'
+      - 'tests/selection/**'
       - 'lab/scenarios/**'
       - '.github/workflows/network-lab.yml'
   workflow_dispatch:
@@ -36,4 +38,16 @@ jobs:
           uv pip install --python /tmp/netlab-venv/bin/python pytest cryptography
           sudo git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: Check namespaces, real packets, queues and cleanup
-        run: sudo env PYTHONPATH="$GITHUB_WORKSPACE/src" /tmp/netlab-venv/bin/python -m pytest -q tests/lab
+        run: sudo env PYTHONPATH="$GITHUB_WORKSPACE/src" /tmp/netlab-venv/bin/python -m pytest -q tests/lab tests/selection tests/kms tests/commands tests/telemetry_lab --basetemp=/tmp/ql-acceptance --junitxml=/tmp/ql-acceptance-results.xml
+      - name: Make acceptance evidence readable
+        if: always()
+        run: sudo chmod -R a+rX /tmp/ql-acceptance /tmp/ql-acceptance-results.xml
+      - name: Preserve acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: packet-lab-acceptance
+          path: |
+            /tmp/ql-acceptance
+            /tmp/ql-acceptance-results.xml
+          retention-days: 14
