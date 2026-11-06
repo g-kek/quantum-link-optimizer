@@ -67,6 +67,23 @@ class Topology:
             self.route("r", "10.250.0.0/24", "10.240.5.1")
             self.points["shared"] = (("c", "to-r"), ("r", "to-c"))
 
+    def set_path_state(self, path, action):
+        branch = path.lower()
+        self.execute(branch, "ip", "link", "set", "to-s", action)
+        if action == "up":
+            # Linux deletes static routes using an administratively down interface.
+            # Bringing veth back restores the connected subnet, not this return route.
+            index = 1 if path == "A" else 2
+            self.execute(
+                branch,
+                "ip",
+                "route",
+                "replace",
+                f"10.250.0.{index}",
+                "via",
+                f"10.240.{index}.1",
+            )
+
     def create_kms(self):
         run("ip", "netns", "add", self.ns("k"))
         self.created.append(self.ns("k"))

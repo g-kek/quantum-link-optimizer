@@ -177,14 +177,7 @@ def run_scenario(config, output):
                     raise RuntimeError("capture or server exited during measurement")
                 while events and events[0]["at_s"] <= elapsed:
                     event = events.pop(0)
-                    topology.execute(
-                        event["path"].lower(),
-                        "ip",
-                        "link",
-                        "set",
-                        "to-s",
-                        event["action"],
-                    )
+                    topology.set_path_state(event["path"], event["action"])
                     event_log.write(
                         json.dumps({**event, "actual_s": time.monotonic() - started})
                         + "\n"
