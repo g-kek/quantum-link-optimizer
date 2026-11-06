@@ -69,6 +69,7 @@ def run_scenario(config, output):
 
     try:
         topology.create()
+        topology.warm_paths()
         configure(topology, config)
         workload = None
         if "commands" in config:
