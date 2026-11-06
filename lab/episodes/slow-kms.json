@@ -1,0 +1,19 @@
+{
+  "split": "development",
+  "seed": 42,
+  "path": "A",
+  "count": 12,
+  "interval_s": 0.02,
+  "deadline_s": 1,
+  "rotate_after": 4,
+  "queue_limit": 32,
+  "kms": {
+    "capacity": 16,
+    "initial": 16,
+    "refill_per_s": 1,
+    "delay_s": 0.08,
+    "mode": "shared"
+  },
+  "network": {},
+  "events": []
+}

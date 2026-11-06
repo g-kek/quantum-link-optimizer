@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "duration_s": 1.2,
+  "base": {
+    "command_every": 2,
+    "queue_limit": 64,
+    "probe_limit": 64,
+    "rotate_after": 30,
+    "probe_timeout_s": 2,
+    "command_deadline_s": 2,
+    "target_ms": 100,
+    "max_age_ms": 500,
+    "kms": {
+      "mode": "shared",
+      "capacity": 32,
+      "initial": 16,
+      "refill_per_s": 2,
+      "delay_s": 0,
+      "key_ttl_s": 120
+    }
+  },
+  "profiles": [
+    "equipment-outage-a",
+    "bc-step-a",
+    "bc-monitor-gap-a"
+  ],
+  "splits": {
+    "train": {
+      "seeds": [
+        11
+      ],
+      "intervals_s": [
+        0.1
+      ]
+    },
+    "validation": {
+      "seeds": [
+        101
+      ],
+      "intervals_s": [
+        0.15
+      ]
+    },
+    "final_test": {
+      "seeds": [
+        1001
+      ],
+      "intervals_s": [
+        0.12
+      ]
+    }
+  }
+}

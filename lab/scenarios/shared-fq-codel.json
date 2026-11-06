@@ -1,0 +1,43 @@
+{
+  "name": "shared-fq-codel",
+  "topology": "shared",
+  "duration_s": 30,
+  "interval_s": 0.1,
+  "paths": {
+    "A": {
+      "forward": {
+        "delay_ms": 10
+      },
+      "reverse": {
+        "delay_ms": 10
+      }
+    },
+    "B": {
+      "forward": {
+        "delay_ms": 10
+      },
+      "reverse": {
+        "delay_ms": 10
+      }
+    }
+  },
+  "events": [],
+  "background": [
+    {
+      "path": "A",
+      "rate_mbit": 1
+    },
+    {
+      "path": "B",
+      "rate_mbit": 1
+    }
+  ],
+  "shared": {
+    "forward": {
+      "rate_mbit": 1,
+      "limit": 100,
+      "queue_discipline": "fq_codel"
+    },
+    "reverse": {}
+  }
+}

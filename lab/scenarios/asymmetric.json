@@ -1,0 +1,26 @@
+{
+  "name": "asymmetric",
+  "topology": "independent",
+  "duration_s": 30,
+  "interval_s": 0.1,
+  "paths": {
+    "A": {
+      "forward": {
+        "delay_ms": 40
+      },
+      "reverse": {
+        "delay_ms": 60
+      }
+    },
+    "B": {
+      "forward": {
+        "delay_ms": 10
+      },
+      "reverse": {
+        "delay_ms": 10
+      }
+    }
+  },
+  "events": [],
+  "background": []
+}

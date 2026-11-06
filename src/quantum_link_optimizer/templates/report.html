@@ -1,0 +1,925 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quantum Link Optimizer — RTT Lab</title>
+    <style>
+      :root {
+        --bg: #f4f5f7;
+        --card: #fff;
+        --ink: #172539;
+        --muted: #5d6b7c;
+        --line: #dde3ea;
+        --blue: #2659db;
+        --teal: #07847c;
+        --amber: #a7530c;
+        --bad: #b03f37;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          15px/1.5 -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+      button,
+      select,
+      input {
+        font: inherit;
+      }
+      button,
+      select,
+      .upload {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: white;
+        color: var(--ink);
+        padding: 9px 13px;
+      }
+      button,
+      .upload {
+        cursor: pointer;
+      }
+      button:hover,
+      .upload:hover {
+        border-color: var(--blue);
+      }
+      button:focus-visible,
+      select:focus-visible,
+      input:focus-visible,
+      .upload:focus-within {
+        outline: 3px solid #9bb8ff;
+        outline-offset: 3px;
+      }
+      .primary {
+        background: var(--blue);
+        color: white;
+        border-color: var(--blue);
+      }
+      .shell {
+        max-width: 1240px;
+        margin: auto;
+        padding: 0 32px 40px;
+      }
+      nav {
+        height: 82px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--line);
+        gap: 16px;
+      }
+      .brand {
+        font-weight: 750;
+        letter-spacing: -0.4px;
+        font-size: 18px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .symbol {
+        width: 30px;
+        height: 30px;
+        border: 2px solid var(--blue);
+        border-radius: 50%;
+        position: relative;
+      }
+      .symbol:after {
+        content: "";
+        position: absolute;
+        inset: 6px -8px;
+        border: 2px solid var(--teal);
+        border-radius: 50%;
+        transform: rotate(-35deg);
+      }
+      .nav-note,
+      .eyebrow {
+        font-size: 11px;
+        font-weight: 750;
+        letter-spacing: 1.7px;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      header {
+        padding: 35px 0 26px;
+        display: flex;
+        justify-content: space-between;
+        gap: 24px;
+        align-items: center;
+      }
+      h1 {
+        font-size: 42px;
+        line-height: 1.12;
+        letter-spacing: -1.6px;
+        margin: 11px 0 12px;
+      }
+      h2 {
+        font-size: 19px;
+        letter-spacing: -0.4px;
+        margin: 0;
+      }
+      p {
+        margin: 6px 0;
+      }
+      .subtitle {
+        max-width: 700px;
+        color: var(--muted);
+      }
+      .badge {
+        display: inline-block;
+        padding: 7px 10px;
+        border-radius: 6px;
+        background: #fff0d8;
+        color: #7c450c;
+        font-size: 12px;
+        font-weight: 650;
+        margin-bottom: 10px;
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 19px 21px;
+      }
+      .card-label {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .number {
+        font-size: 30px;
+        letter-spacing: -1px;
+        font-weight: 650;
+        margin: 6px 0 2px;
+      }
+      .unit {
+        font-size: 13px;
+        letter-spacing: 0;
+        color: var(--muted);
+      }
+      .small {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .notice {
+        margin: 16px 0 22px;
+        border-left: 3px solid var(--amber);
+        background: #fff8eb;
+        padding: 13px 18px;
+        border-radius: 0 8px 8px 0;
+        font-size: 13px;
+      }
+      .panel {
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 20px;
+      }
+      .panel-top {
+        padding: 21px 24px 8px;
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: center;
+      }
+      .legend {
+        display: flex;
+        gap: 18px;
+        font-size: 12px;
+        color: var(--muted);
+        padding: 4px 24px 0;
+        flex-wrap: wrap;
+      }
+      .key {
+        display: inline-block;
+        width: 15px;
+        height: 3px;
+        vertical-align: middle;
+        margin-right: 6px;
+      }
+      .chart {
+        padding: 4px 12px 0;
+      }
+      svg {
+        display: block;
+        width: 100%;
+        height: auto;
+        min-height: 200px;
+      }
+      .replay {
+        padding: 10px 24px 20px;
+        border-top: 1px solid #eef1f5;
+      }
+      .replay-controls {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+      .replay-controls input {
+        flex: 1;
+        min-width: 60px;
+        accent-color: var(--blue);
+      }
+      .step {
+        font-variant-numeric: tabular-nums;
+        min-width: 102px;
+        text-align: right;
+      }
+      .decision {
+        display: grid;
+        grid-template-columns: 1.3fr 1fr 1fr;
+        gap: 18px;
+        margin-top: 16px;
+        padding-top: 15px;
+        border-top: 1px solid var(--line);
+      }
+      .decision strong {
+        font-size: 16px;
+        display: block;
+      }
+      .table-wrap {
+        overflow: auto;
+        padding: 0 24px 15px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        white-space: nowrap;
+        font-size: 13px;
+      }
+      th {
+        text-align: right;
+        font-weight: 500;
+        color: var(--muted);
+        font-size: 11px;
+        border-bottom: 1px solid var(--line);
+        padding: 15px 10px;
+      }
+      td {
+        padding: 13px 10px;
+        text-align: right;
+        border-bottom: 1px solid #edf0f4;
+        font-variant-numeric: tabular-nums;
+      }
+      th:first-child,
+      td:first-child {
+        text-align: left;
+        padding-left: 0;
+      }
+      tr.active {
+        background: #f2f6ff;
+      }
+      td:first-child {
+        font-weight: 600;
+      }
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+      .path-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      .path-values {
+        display: flex;
+        gap: 35px;
+      }
+      .path-values b {
+        display: block;
+        font-size: 20px;
+        font-weight: 600;
+      }
+      .method {
+        padding: 22px 24px;
+      }
+      .method p {
+        color: var(--muted);
+        font-size: 13px;
+        max-width: 970px;
+      }
+      .code {
+        font:
+          11px/1.6 ui-monospace,
+          SFMono-Regular,
+          monospace;
+        overflow-wrap: anywhere;
+      }
+      details {
+        margin-top: 15px;
+      }
+      summary {
+        cursor: pointer;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .error {
+        background: #fde8e5;
+        color: #8b2820;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+      }
+      footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        color: var(--muted);
+        font-size: 11px;
+        padding: 5px 0;
+      }
+      .upload {
+        display: inline-block;
+        white-space: nowrap;
+      }
+      .upload input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .oracle {
+        font-size: 10px;
+        color: var(--amber);
+        margin-left: 6px;
+      }
+      .hidden {
+        display: none;
+      }
+      @media (max-width: 850px) {
+        .shell {
+          padding: 0 16px 25px;
+        }
+        h1 {
+          font-size: 32px;
+        }
+        .cards {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        header {
+          display: block;
+        }
+        .actions {
+          margin-top: 18px;
+        }
+        .panel-top {
+          align-items: start;
+          flex-direction: column;
+        }
+        .decision {
+          grid-template-columns: 1fr;
+        }
+        .nav-note {
+          display: none;
+        }
+        .two-col {
+          grid-template-columns: 1fr;
+        }
+        .panel-top,
+        .replay,
+        .method {
+          padding-left: 16px;
+          padding-right: 16px;
+        }
+        .step {
+          min-width: 80px;
+        }
+        .table-wrap {
+          padding: 0 16px 15px;
+        }
+        footer {
+          flex-direction: column;
+        }
+      }
+      @media print {
+        .actions,
+        .replay-controls,
+        button,
+        select {
+          display: none;
+        }
+        .shell {
+          max-width: none;
+        }
+        .panel,
+        .card {
+          break-inside: avoid;
+        }
+        body {
+          background: white;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <nav>
+        <div class="brand">
+          <span class="symbol" aria-hidden="true"></span>Quantum Link Optimizer
+        </div>
+        <span class="nav-note">RTT Lab / Москва — Краснодар</span>
+      </nav>
+      <header>
+        <div>
+          <div class="eyebrow">Исследовательский MVP · анализ двух путей</div>
+          <h1 id="title">Два пути. Один выбор.</h1>
+          <span class="badge" id="source"></span>
+          <p class="subtitle">
+            Проверяем, когда выбор канала помогает сократить RTT — и где
+            проходит предел этого подхода.
+          </p>
+        </div>
+        <div class="actions">
+          <label class="upload"
+            >Открыть отчёт JSON<input
+              id="file"
+              type="file"
+              accept=".json,application/json"
+              aria-label="Открыть отчёт JSON"
+          /></label>
+          <button id="export">Скачать JSON</button>
+        </div>
+      </header>
+      <div id="error" class="error hidden" role="alert"></div>
+      <main>
+        <section class="cards" aria-label="Основные показатели">
+          <div class="card">
+            <div class="card-label">Целевой RTT</div>
+            <div class="number">
+              <span id="sla"></span> <span class="unit">мс</span>
+            </div>
+            <div class="small">Экспериментальный порог</div>
+          </div>
+          <div class="card">
+            <div class="card-label">Оба пути выше порога</div>
+            <div class="number" id="both"></div>
+            <div class="small" id="pairs"></div>
+          </div>
+          <div class="card">
+            <div class="card-label">p95 лучшего из двух RTT</div>
+            <div class="number">
+              <span id="oracle"></span> <span class="unit">мс</span>
+            </div>
+            <div class="small">Ориентир с доступом к исходам</div>
+          </div>
+          <div class="card">
+            <div class="card-label">p95 выбранной политики</div>
+            <div class="number">
+              <span id="selected-p95"></span> <span class="unit">мс</span>
+            </div>
+            <div class="small" id="selected-coverage"></div>
+          </div>
+        </section>
+        <div class="notice" id="notice"></div>
+        <section class="panel" aria-label="График RTT и replay">
+          <div class="panel-top">
+            <div>
+              <h2>Задержка и решения</h2>
+              <p class="small" id="period"></p>
+            </div>
+            <label class="small"
+              >Политика
+              <select id="policy" aria-label="Политика выбора пути"></select
+            ></label>
+          </div>
+          <div class="legend">
+            <span
+              ><i class="key" style="background: var(--blue)"></i>Путь 0</span
+            ><span
+              ><i class="key" style="background: var(--teal)"></i>Путь 1</span
+            ><span
+              ><i class="key" style="background: #bf722b"></i>Порог RTT</span
+            ><span>Разрывы линий — неизвестный RTT</span>
+          </div>
+          <div class="chart">
+            <svg
+              id="chart"
+              viewBox="0 0 1100 300"
+              role="img"
+              aria-label="RTT двух путей в миллисекундах"
+            ></svg>
+          </div>
+          <div class="replay">
+            <div class="replay-controls">
+              <button id="play" class="primary">Воспроизвести</button
+              ><input
+                id="cursor"
+                type="range"
+                min="0"
+                value="0"
+                aria-label="Шаг воспроизведения"
+              /><span class="small step" id="step"></span>
+            </div>
+            <div class="decision">
+              <div>
+                <div class="small">Решение по предыдущей истории</div>
+                <strong id="decision"></strong>
+                <div class="small" id="reason"></div>
+              </div>
+              <div>
+                <div class="small">Наблюдаемый исход шага</div>
+                <strong id="outcome"></strong>
+                <div class="small" id="timestamp"></div>
+              </div>
+              <div>
+                <div class="small">Граница доступной информации</div>
+                <strong id="cutoff"></strong>
+                <div class="small" id="cutoff-note">
+                  Решение не использует исход текущего шага
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <div class="two-col" id="paths"></div>
+        <section class="panel">
+          <div class="panel-top">
+            <div>
+              <h2>Сравнение политик</h2>
+              <p class="small">
+                Весь период оценки. Метрики RTT — только по известным исходам;
+                сравнивайте покрытие и отказы.
+              </p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Политика</th>
+                  <th>Средний RTT, мс</th>
+                  <th>p95, мс</th>
+                  <th>p99, мс</th>
+                  <th>Выше порога</th>
+                  <th>Покрытие</th>
+                  <th>Переключения</th>
+                  <th>Отказы</th>
+                </tr>
+              </thead>
+              <tbody id="policies"></tbody>
+            </table>
+          </div>
+        </section>
+        <section class="panel method">
+          <h2>Условия эксперимента</h2>
+          <p id="method"></p>
+          <p>
+            Штраф переключения — параметр расчёта. Реального переключения, его
+            простоя и влияния нагрузки здесь нет. Ping RTT не измеряет QBER,
+            скорость выработки ключей или точность PTP.
+          </p>
+          <p id="config"></p>
+          <details>
+            <summary>Происхождение и воспроизводимость</summary>
+            <div id="provenance" class="code"></div>
+          </details>
+        </section>
+      </main>
+      <footer>
+        <span
+          >Локальный отчёт · без сетевых запросов · исходный JSON можно
+          экспортировать</span
+        ><span id="revision"></span>
+      </footer>
+    </div>
+    <noscript
+      ><p>
+        Для интерактивного отчёта включите JavaScript. Метрики доступны в
+        соседнем report.json.
+      </p></noscript
+    >
+    <script id="report-data" type="application/json">
+      __REPORT_DATA__
+    </script>
+    <script>
+      "use strict";
+      const $ = (id) => document.getElementById(id);
+      const labels = {
+        risk_selector: "Риск + ML",
+        previous_rtt_selector: "Последний RTT · без удержания",
+        previous_rtt_constrained: "Последний RTT · с ограничениями",
+        ewma_constrained: "EWMA · с ограничениями",
+        nn_rtt_constrained: "Прогноз ML · с ограничениями",
+        fixed_path_0: "Всегда путь 0",
+        fixed_path_1: "Всегда путь 1",
+        pointwise_oracle_evaluation_only: "Oracle · только оценка",
+      };
+      const reasons = {
+        initial_minimum_objective: "Первичное назначение по оценке стоимости",
+        minimum_hold: "Минимальный срок удержания пути",
+        objective_improvement:
+          "Ожидаемое улучшение превышает затраты и гистерезис",
+        hysteresis: "Преимущество недостаточно для переключения",
+        abstain_missing_history:
+          "В предыдущем наблюдении отсутствует RTT одного из путей",
+        abstain_stale_history: "История устарела: превышен допустимый интервал",
+        abstain_invalid_prediction: "Прогноз невалиден",
+        fixed_path: "Фиксированный путь",
+        causal_policy: "Политика использует только прошлые RTT",
+        evaluation_only_future:
+          "Недостижимый ориентир: использует текущие исходы",
+      };
+      const fmt = (v) =>
+        v === null || v === undefined
+          ? "—"
+          : Number(v).toLocaleString("ru-RU", { maximumFractionDigits: 2 });
+      const pct = (v) =>
+        v === null || v === undefined ? "—" : fmt(100 * v) + "%";
+      let data,
+        policy,
+        timer = null,
+        chartMax = 1;
+      function stop() {
+        clearInterval(timer);
+        timer = null;
+        $("play").textContent = "Воспроизвести";
+      }
+      function validate(d) {
+        if (
+          !d ||
+          !["synthetic_demo", "ping_audit"].includes(d.kind) ||
+          !Array.isArray(d.points) ||
+          !d.points.length ||
+          !d.policies ||
+          !d.feasibility ||
+          !Array.isArray(d.paths) ||
+          !Number.isFinite(d.sla_ms) ||
+          d.sla_ms <= 0
+        )
+          throw Error("Нужен report.json от команды demo или audit.");
+        const names = Object.keys(d.policies);
+        if (!names.length) throw Error("В отчёте нет политик.");
+        for (const p of d.points) {
+          if (
+            !Number.isInteger(p.sample) ||
+            !Array.isArray(p.rtt) ||
+            p.rtt.length !== 2 ||
+            p.rtt.some((v) => v !== null && (!Number.isFinite(v) || v <= 0)) ||
+            !p.choices ||
+            !p.reasons ||
+            names.some((n) => ![0, 1, null].includes(p.choices[n]))
+          )
+            throw Error("Некорректные RTT или решения в отчёте.");
+        }
+        return d;
+      }
+      function load(d) {
+        validate(d);
+        stop();
+        data = d;
+        chartMax = d.sla_ms * 1.3;
+        for (const p of d.points)
+          for (const v of p.rtt)
+            if (v !== null) chartMax = Math.max(chartMax, v);
+        chartMax *= 1.08;
+        $("error").classList.add("hidden");
+        $("title").textContent = d.title;
+        $("source").textContent = d.source_label;
+        $("sla").textContent = fmt(d.sla_ms);
+        const f = d.feasibility;
+        $("both").textContent = pct(f.both_paths_bad_rate_available_pairs);
+        $("pairs").textContent =
+          `Парное покрытие ${pct(f.paired_coverage)} · ${fmt(f.paired_samples)} шагов`;
+        $("oracle").textContent = fmt(f.oracle_min_p95_ms_available_pairs);
+        $("notice").textContent =
+          f.paired_samples === 0
+            ? "Нет одновременных известных RTT двух путей: предел выбора оценить нельзя."
+            : f.oracle_min_p95_ms_available_pairs > d.sla_ms
+              ? "Даже выбор лучшего фактического RTT на доступных парах не даёт p95 ниже порога. Одних переключений недостаточно."
+              : "На доступных парах есть запас для выбора пути. Это ещё не доказательство, что прогноз или реальное переключение обеспечат целевой RTT.";
+        if (f.paired_coverage < 1)
+          $("notice").textContent +=
+            " Вывод относится только к доступным парам; потери и пропуски не считаются успехом.";
+        $("policy").replaceChildren();
+        for (const name of Object.keys(d.policies)) {
+          const o = document.createElement("option");
+          o.value = name;
+          o.textContent = labels[name] || name;
+          $("policy").append(o);
+        }
+        policy = d.policies.risk_selector
+          ? "risk_selector"
+          : "previous_rtt_constrained";
+        if (!d.policies[policy]) policy = Object.keys(d.policies)[0];
+        $("policy").value = policy;
+        $("cursor").max = d.points.length - 1;
+        $("cursor").value = d.points.length - 1;
+        $("period").textContent =
+          `${fmt(d.points.length)} шагов оценки из ${fmt(d.samples_total)} · sample ${d.points[0].sample}–${d.points.at(-1).sample}`;
+        $("paths").replaceChildren();
+        for (const p of d.paths) {
+          const box = document.createElement("section");
+          box.className = "card";
+          const title = document.createElement("div");
+          title.className = "path-title";
+          title.textContent = `Путь ${p.path} · покрытие ${pct(p.coverage)}`;
+          box.append(title);
+          const vals = document.createElement("div");
+          vals.className = "path-values";
+          for (const [label, value] of [
+            ["Средний RTT, мс", p.mean_rtt_ms],
+            ["p95, мс", p.p95_rtt_ms],
+            ["Тайм-ауты / пропуски", `${p.timeouts} / ${p.missing}`],
+          ]) {
+            const item = document.createElement("div");
+            item.className = "small";
+            item.textContent = label;
+            const b = document.createElement("b");
+            b.textContent = typeof value === "string" ? value : fmt(value);
+            item.append(b);
+            vals.append(item);
+          }
+          box.append(vals);
+          $("paths").append(box);
+        }
+        $("method").textContent =
+          d.kind === "synthetic_demo"
+            ? `Синтетика, seed ${d.seed}, сценарий ${d.scenario}. Модель обучена на первых 60%, эпоха выбрана по следующим 20%; здесь показан финальный тест. Веса фиксированы; решения replay сверены с пакетной оценкой. Сценарий high-rtt добавляет 625 мс к обоим путям и не калиброван по МКС РЖД.`
+            : "Анализ внешнего CSV без обучения и без переноса синтетической модели. Оценены все шаги после первого. Previous RTT и EWMA используют только прошлую историю; alpha EWMA = 0,3. Тайм-ауты и пропуски сохранены отдельно. Признак real_telemetry задаётся поставщиком CSV и сам по себе не подтверждает происхождение.";
+        const c = d.configuration;
+        $("config").textContent =
+          `Удержание: ${c.min_hold_samples} измерений · гистерезис: ${fmt(c.hysteresis_ms)} мс · стоимость переключения: ${fmt(c.switching_cost_ms)} мс.`;
+        $("provenance").textContent = JSON.stringify(
+          {
+            runtime: d.runtime,
+            input_sha256: d.input_sha256,
+            model_sha256: d.model_sha256,
+            sources: d.sources,
+            provenance: d.provenance,
+            evaluation_note: d.evaluation_note,
+          },
+          null,
+          2,
+        );
+        $("provenance").style.whiteSpace = "pre-wrap";
+        $("revision").textContent =
+          "Commit " +
+          (d.runtime?.git_commit?.slice(0, 10) || "не определён") +
+          (d.runtime?.working_tree_dirty ? " · рабочие изменения" : "");
+        render();
+      }
+      function render() {
+        const cursor = Number($("cursor").value),
+          p = data.points[cursor],
+          m = data.policies[policy];
+        $("selected-p95").textContent = fmt(m.p95_rtt_ms);
+        $("selected-coverage").textContent =
+          `Покрытие ${pct(m.selected_outcome_coverage)}`;
+        const choice = p.choices[policy];
+        $("decision").textContent =
+          choice === null ? "Отказ от выбора" : `Путь ${choice}`;
+        $("reason").textContent =
+          reasons[p.reasons[policy]] || p.reasons[policy];
+        $("outcome").textContent =
+          choice === null
+            ? "—"
+            : p.rtt[choice] === null
+              ? "RTT неизвестен"
+              : `${fmt(p.rtt[choice])} мс`;
+        $("timestamp").textContent = p.timestamp;
+        $("cutoff").textContent = String(p.information_cutoff);
+        $("cutoff-note").textContent = policy.includes("oracle")
+          ? "Oracle использует текущий исход и служит только ориентиром"
+          : "Решение не использует исход текущего шага";
+        $("step").textContent = `${cursor + 1} / ${data.points.length}`;
+        if (policy.includes("oracle"))
+          $("cutoff").textContent = "Текущие исходы · только оценка";
+        $("policies").replaceChildren();
+        for (const [name, v] of Object.entries(data.policies)) {
+          const tr = document.createElement("tr");
+          if (name === policy) tr.className = "active";
+          for (const text of [
+            labels[name] || name,
+            fmt(v.mean_rtt_ms),
+            fmt(v.p95_rtt_ms),
+            fmt(v.p99_rtt_ms),
+            pct(v.sla_violation_rate),
+            pct(v.selected_outcome_coverage),
+            fmt(v.switches),
+            fmt(v.abstentions),
+          ]) {
+            const td = document.createElement("td");
+            td.textContent = text;
+            tr.append(td);
+          }
+          $("policies").append(tr);
+        }
+        draw(cursor);
+      }
+      function draw(cursor) {
+        const W = 1100,
+          H = 300,
+          L = 62,
+          R = 22,
+          T = 18,
+          B = 40,
+          n = data.points.length;
+        const max = chartMax;
+        const x = (i) => L + ((W - L - R) * i) / Math.max(1, n - 1),
+          y = (v) => H - B - ((H - T - B) * v) / max;
+        let svg = "";
+        for (let k = 0; k <= 4; k++) {
+          const v = (max * k) / 4,
+            yy = y(v);
+          svg += `<line x1="${L}" y1="${yy}" x2="${W - R}" y2="${yy}" stroke="#e8edf3"/><text x="${L - 10}" y="${yy + 4}" text-anchor="end" fill="#647386" font-size="11">${Math.round(v)}</text>`;
+        }
+        svg += `<text x="16" y="17" fill="#647386" font-size="11">мс</text><line x1="${L}" y1="${y(data.sla_ms)}" x2="${W - R}" y2="${y(data.sla_ms)}" stroke="#bf722b" stroke-dasharray="6 5"/>`;
+        for (let c = 0; c < 2; c++) {
+          let d = "",
+            connected = false;
+          for (let i = 0; i <= cursor; i++) {
+            const v = data.points[i].rtt[c];
+            if (v === null) {
+              connected = false;
+              continue;
+            }
+            d += `${connected ? "L" : "M"}${x(i).toFixed(2)},${y(v).toFixed(2)} `;
+            connected = true;
+          }
+          svg += `<path d="${d}" fill="none" stroke="${c === 0 ? "#2659db" : "#07847c"}" stroke-width="1.8"/>`;
+        }
+        for (let k = 0; k <= 4; k++) {
+          const i = Math.round(((n - 1) * k) / 4);
+          svg += `<text x="${x(i)}" y="${H - 12}" text-anchor="middle" fill="#647386" font-size="11">${data.points[i].sample}</text>`;
+        }
+        svg += `<line x1="${x(cursor)}" y1="${T}" x2="${x(cursor)}" y2="${H - B}" stroke="#9aa9ba" stroke-dasharray="3 4"/>`;
+        const selected = data.points[cursor].choices[policy];
+        if (selected !== null && data.points[cursor].rtt[selected] !== null)
+          svg += `<circle cx="${x(cursor)}" cy="${y(data.points[cursor].rtt[selected])}" r="4" fill="#172539" stroke="white" stroke-width="2"/>`;
+        $("chart").innerHTML = svg;
+      }
+      $("policy").addEventListener("change", (e) => {
+        policy = e.target.value;
+        render();
+      });
+      $("cursor").addEventListener("input", () => {
+        stop();
+        render();
+      });
+      $("play").addEventListener("click", () => {
+        if (timer) {
+          stop();
+          return;
+        }
+        if (Number($("cursor").value) >= data.points.length - 1)
+          $("cursor").value = 0;
+        $("play").textContent = "Пауза";
+        render();
+        timer = setInterval(() => {
+          const next = Math.min(
+            data.points.length - 1,
+            Number($("cursor").value) + 1,
+          );
+          $("cursor").value = next;
+          render();
+          if (next === data.points.length - 1) stop();
+        }, 180);
+      });
+      $("export").addEventListener("click", () => {
+        const url = URL.createObjectURL(
+          new Blob([JSON.stringify(data, null, 2)], {
+            type: "application/json",
+          }),
+        );
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "quantum-link-report.json";
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      });
+      $("file").addEventListener("change", async (e) => {
+        try {
+          const file = e.target.files[0];
+          if (file) load(JSON.parse(await file.text()));
+        } catch (error) {
+          $("error").textContent = error.message;
+          $("error").classList.remove("hidden");
+        }
+      });
+      try {
+        load(JSON.parse($("report-data").textContent));
+      } catch (error) {
+        $("error").textContent = error.message;
+        $("error").classList.remove("hidden");
+      }
+    </script>
+  </body>
+</html>

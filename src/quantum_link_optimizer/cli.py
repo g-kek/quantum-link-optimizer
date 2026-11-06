@@ -1,0 +1,314 @@
+"""Reproducible offline experiment CLI; never touches live routing."""
+
+import argparse
+import csv
+import hashlib
+import json
+import platform
+from pathlib import Path
+
+import numpy as np
+import torch
+
+from quantum_link_optimizer.dataset import make_windows
+from quantum_link_optimizer.evaluation import evaluate_policies, forecast_metrics
+from quantum_link_optimizer.model import predict, train_model
+from quantum_link_optimizer.telemetry import (
+    SOURCE,
+    generate_telemetry,
+    read_telemetry,
+    write_telemetry,
+)
+
+
+def run_experiment(
+    output: Path,
+    samples: int = 4000,
+    seed: int = 42,
+    window: int = 16,
+    epochs: int = 60,
+    switching_cost_ms: float = 3.0,
+    sla_ms: float = 100.0,
+    input_path: Path | None = None,
+) -> dict:
+    if not np.isfinite(sla_ms) or sla_ms <= 0:
+        raise ValueError("SLA threshold must be finite and positive")
+    if not np.isfinite(switching_cost_ms) or switching_cost_ms < 0:
+        raise ValueError("Switching cost must be finite and nonnegative")
+    values = (
+        read_telemetry(input_path) if input_path else generate_telemetry(samples, seed)
+    )
+    data = make_windows(values, window)
+    model, history = train_model(data, seed, epochs, sla_ms)
+    all_forecast, all_probability = predict(model, data)
+    test = data.mask("test")
+    actual = data.y[test]
+    forecast = all_forecast[test]
+    probability = all_probability[test]
+    previous = values[data.indices[test] - 1]
+    policies, choices = evaluate_policies(
+        actual,
+        previous,
+        forecast,
+        switching_cost_ms,
+        sla_ms,
+    )
+    output.mkdir(parents=True, exist_ok=True)
+    telemetry_path = output / "telemetry.csv"
+    write_telemetry(telemetry_path, values)
+    configuration = {
+        "samples": len(values),
+        "seed": seed,
+        "window": window,
+        "epochs": epochs,
+        "switching_cost_ms": switching_cost_ms,
+        "sla_ms": sla_ms,
+        "input_path": str(input_path) if input_path else None,
+    }
+    report = {
+        "source": SOURCE,
+        "warning": "Synthetic, uncalibrated; not evidence of real QKD/PTP performance",
+        "configuration": configuration,
+        "versions": {
+            "python": platform.python_version(),
+            "numpy": np.__version__,
+            "torch": torch.__version__,
+        },
+        "telemetry_sha256": hashlib.sha256(telemetry_path.read_bytes()).hexdigest(),
+        "split": {
+            "train_target_range": [window, data.train_end - 1],
+            "validation_target_range": [data.train_end, data.val_end - 1],
+            "test_target_range": [data.val_end, len(values) - 1],
+            "scaler_fit_row_range": [0, data.train_end - 1],
+        },
+        "forecast": {
+            "neural_network": forecast_metrics(actual, forecast, probability, sla_ms),
+            "persistence": forecast_metrics(
+                actual,
+                previous,
+                (previous > sla_ms).astype(float),
+                sla_ms,
+            ),
+            "train_climatology_brier_score": float(
+                np.mean(
+                    (
+                        (values[: data.train_end] > sla_ms).mean(axis=0)
+                        - (actual > sla_ms)
+                    )
+                    ** 2,
+                )
+            ),
+        },
+        "policies": policies,
+        "training": {
+            "epochs_run": len(history),
+            "best_epoch": min(history, key=lambda row: row["val_loss"])["epoch"],
+            "history": history,
+        },
+    }
+    checkpoint = {
+        "state_dict": model.state_dict(),
+        "window": window,
+        "mean": data.mean.tolist(),
+        "scale": data.scale.tolist(),
+        "configuration": configuration,
+    }
+    torch.save(checkpoint, output / "model.pt")
+    (output / "report.json").write_text(
+        json.dumps(report, indent=2, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+    with (output / "predictions.csv").open("w", newline="", encoding="utf-8") as stream:
+        writer = csv.writer(stream)
+        writer.writerow(
+            [
+                "sample",
+                "source",
+                "actual_0_ms",
+                "actual_1_ms",
+                "previous_0_ms",
+                "previous_1_ms",
+                "forecast_0_ms",
+                "forecast_1_ms",
+                "degradation_probability_0",
+                "degradation_probability_1",
+                *choices,
+            ]
+        )
+        for t, index in enumerate(data.indices[test]):
+            writer.writerow(
+                [
+                    index,
+                    SOURCE,
+                    *actual[t],
+                    *previous[t],
+                    *forecast[t],
+                    *probability[t],
+                    *(selected[t] for selected in choices.values()),
+                ]
+            )
+    return report
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Offline two-path RTT analysis and replay"
+    )
+    commands = parser.add_subparsers(dest="command", required=True)
+    generate = commands.add_parser("generate", help="Write labeled synthetic CSV")
+    generate.add_argument("--output", type=Path, required=True)
+    generate.add_argument("--samples", type=int, default=4000)
+    generate.add_argument("--seed", type=int, default=42)
+    experiment = commands.add_parser("experiment", help="Generate, train and evaluate")
+    experiment.add_argument("--output", type=Path, default=Path("artifacts/run-42"))
+    experiment.add_argument("--input", type=Path)
+    experiment.add_argument("--samples", type=int, default=4000)
+    experiment.add_argument("--seed", type=int, default=42)
+    experiment.add_argument("--window", type=int, default=16)
+    experiment.add_argument("--epochs", type=int, default=60)
+    experiment.add_argument("--switching-cost-ms", type=float, default=3.0)
+    experiment.add_argument("--sla-ms", type=float, default=100.0)
+    warning = commands.add_parser(
+        "warning-experiment", help="Purged multihorizon warning"
+    )
+    warning.add_argument("--output", type=Path, default=Path("artifacts/warning-42"))
+    warning.add_argument("--samples", type=int, default=4000)
+    warning.add_argument("--seed", type=int, default=42)
+    warning.add_argument("--epochs", type=int, default=40)
+    risk = commands.add_parser("risk-experiment", help="Causal risk-aware selection")
+    risk.add_argument("--output", type=Path, default=Path("artifacts/risk-42"))
+    risk.add_argument("--samples", type=int, default=4000)
+    risk.add_argument("--seed", type=int, default=42)
+    risk.add_argument("--epochs", type=int, default=40)
+    risk.add_argument(
+        "--scenario", choices=["normal", "shared-stress", "high-rtt"], default="normal"
+    )
+    risk.add_argument("--violation-penalty-ms", type=float, default=100.0)
+    risk.add_argument("--switching-cost-ms", type=float, default=3.0)
+    risk.add_argument("--hysteresis-ms", type=float, default=3.0)
+    risk.add_argument("--min-hold-samples", type=int, default=5)
+    shadow = commands.add_parser(
+        "shadow-replay", help="Offline decisions before outcomes"
+    )
+    shadow.add_argument("--model", type=Path, required=True)
+    inputs = shadow.add_mutually_exclusive_group(required=True)
+    inputs.add_argument("--synthetic-input", type=Path)
+    inputs.add_argument("--telemetry-input", type=Path)
+    shadow.add_argument("--output", type=Path, required=True)
+    shadow.add_argument("--start-sample", type=int)
+    shadow.add_argument("--max-gap-seconds", type=float, default=2.0)
+    shadow.add_argument("--allow-domain-shift", action="store_true")
+    atlas = commands.add_parser(
+        "atlas-benchmark", help="Local single-path Atlas baseline"
+    )
+    atlas.add_argument("--input", type=Path, required=True)
+    atlas.add_argument("--output", type=Path, required=True)
+    suite = commands.add_parser(
+        "benchmark-suite", help="Predeclared multi-seed shadow suite"
+    )
+    suite.add_argument("--output", type=Path, required=True)
+    suite.add_argument("--seeds", type=int, nargs="+", default=[41, 42, 43])
+    suite.add_argument("--samples", type=int, default=4000)
+    suite.add_argument("--epochs", type=int, default=40)
+    audit = commands.add_parser("audit", help="Analyze measured two-path ping RTT")
+    audit.add_argument("--input", type=Path, required=True)
+    audit.add_argument("--output", type=Path, default=Path("artifacts/ping-audit"))
+    audit.add_argument("--sla-ms", type=float, default=100.0)
+    audit.add_argument("--max-gap-seconds", type=float, default=2.0)
+    demo = commands.add_parser("demo", help="Build a standalone synthetic MVP report")
+    demo.add_argument("--output", type=Path, default=Path("artifacts/demo"))
+    demo.add_argument("--samples", type=int, default=4000)
+    demo.add_argument("--seed", type=int, default=42)
+    demo.add_argument("--epochs", type=int, default=40)
+    demo.add_argument(
+        "--scenario",
+        choices=["high-rtt", "normal", "shared-stress"],
+        default="high-rtt",
+    )
+    args = parser.parse_args()
+    try:
+        if args.command == "demo":
+            from quantum_link_optimizer.demo import run_demo
+
+            run_demo(args.output, args.samples, args.seed, args.epochs, args.scenario)
+            print(f"Synthetic demo: {args.output / 'index.html'}")
+        elif args.command == "audit":
+            from quantum_link_optimizer.audit import run_audit
+
+            report = run_audit(
+                args.input, args.output, args.sla_ms, args.max_gap_seconds
+            )
+            print(
+                json.dumps({k: v for k, v in report.items() if k != "points"}, indent=2)
+            )
+        elif args.command == "generate":
+            write_telemetry(args.output, generate_telemetry(args.samples, args.seed))
+            print(f"Synthetic telemetry: {args.output}")
+        elif args.command == "shadow-replay":
+            from quantum_link_optimizer.shadow import run_shadow
+
+            report = run_shadow(
+                args.model,
+                args.telemetry_input or args.synthetic_input,
+                args.output,
+                external=args.telemetry_input is not None,
+                allow_domain_shift=args.allow_domain_shift,
+                start_sample=args.start_sample,
+                max_gap_seconds=args.max_gap_seconds,
+            )
+            print(json.dumps(report, indent=2))
+        elif args.command == "benchmark-suite":
+            from quantum_link_optimizer.suite import run_suite
+
+            report = run_suite(args.output, args.seeds, args.samples, args.epochs)
+            print(json.dumps(report, indent=2, allow_nan=False))
+        elif args.command == "atlas-benchmark":
+            from quantum_link_optimizer.atlas import atlas_benchmark
+
+            print(json.dumps(atlas_benchmark(args.input, args.output), indent=2))
+        elif args.command == "risk-experiment":
+            from quantum_link_optimizer.risk import RiskConfig, run_risk
+
+            config = RiskConfig(
+                args.violation_penalty_ms,
+                args.switching_cost_ms,
+                args.hysteresis_ms,
+                args.min_hold_samples,
+            )
+            report = run_risk(
+                args.output, args.samples, args.seed, args.epochs, args.scenario, config
+            )
+            print(json.dumps(report, indent=2))
+        elif args.command == "warning-experiment":
+            from quantum_link_optimizer.warning import run_warning
+
+            report = run_warning(args.output, args.samples, args.seed, args.epochs)
+            print(
+                json.dumps(
+                    {k: v for k, v in report.items() if k != "training"}, indent=2
+                )
+            )
+        else:
+            report = run_experiment(
+                args.output,
+                args.samples,
+                args.seed,
+                args.window,
+                args.epochs,
+                args.switching_cost_ms,
+                args.sla_ms,
+                args.input,
+            )
+            print(
+                json.dumps(
+                    {key: value for key, value in report.items() if key != "training"},
+                    indent=2,
+                    allow_nan=False,
+                )
+            )
+    except (ValueError, OSError) as error:
+        parser.error(str(error))
+
+
+if __name__ == "__main__":
+    main()

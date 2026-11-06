@@ -1,0 +1,39 @@
+{
+  "name": "online-selection",
+  "topology": "independent",
+  "duration_s": 30,
+  "interval_s": 0.1,
+  "paths": {
+    "A": {
+      "forward": {
+        "delay_ms": 100
+      },
+      "reverse": {
+        "delay_ms": 100
+      }
+    },
+    "B": {
+      "forward": {
+        "delay_ms": 5
+      },
+      "reverse": {
+        "delay_ms": 5
+      }
+    }
+  },
+  "events": [],
+  "background": [],
+  "commands": {
+    "path": "A",
+    "count": 10,
+    "interval_s": 0.2,
+    "deadline_s": 1,
+    "rotate_after": 5,
+    "kms_config": "lab/kms/normal.json",
+    "routing": {
+      "mode": "ewma",
+      "min_hold_ms": 100
+    },
+    "warmup_s": 0.2
+  }
+}

@@ -1,0 +1,53 @@
+name: Linux packet lab
+on:
+  push:
+    paths:
+      - 'src/quantum_link_optimizer/**'
+      - 'tests/lab/**'
+      - 'tests/selection/**'
+      - 'lab/scenarios/**'
+      - '.github/workflows/network-lab.yml'
+  pull_request:
+    paths:
+      - 'src/quantum_link_optimizer/**'
+      - 'tests/lab/**'
+      - 'tests/selection/**'
+      - 'lab/scenarios/**'
+      - '.github/workflows/network-lab.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  namespaces:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.15'
+      - name: Install Linux networking tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y iproute2 iputils-ping iperf3 tcpdump
+          sudo modprobe sch_netem
+          sudo modprobe sch_fq_codel
+      - name: Prepare lightweight test environment
+        run: |
+          uv venv --python 3.12 /tmp/netlab-venv
+          uv pip install --python /tmp/netlab-venv/bin/python pytest cryptography
+          sudo git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Check namespaces, real packets, queues and cleanup
+        run: sudo env PYTHONPATH="$GITHUB_WORKSPACE/src" /tmp/netlab-venv/bin/python -m pytest -q tests/lab tests/selection tests/kms tests/commands tests/telemetry_lab --basetemp=/tmp/ql-acceptance --junitxml=/tmp/ql-acceptance-results.xml
+      - name: Make acceptance evidence readable
+        if: always()
+        run: sudo chmod -R a+rX /tmp/ql-acceptance /tmp/ql-acceptance-results.xml
+      - name: Preserve acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: packet-lab-acceptance
+          path: |
+            /tmp/ql-acceptance
+            /tmp/ql-acceptance-results.xml
+          retention-days: 14

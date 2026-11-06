@@ -1,0 +1,42 @@
+{
+  "name": "shared-bottleneck",
+  "topology": "shared",
+  "duration_s": 30,
+  "interval_s": 0.1,
+  "paths": {
+    "A": {
+      "forward": {
+        "delay_ms": 10
+      },
+      "reverse": {
+        "delay_ms": 10
+      }
+    },
+    "B": {
+      "forward": {
+        "delay_ms": 10
+      },
+      "reverse": {
+        "delay_ms": 10
+      }
+    }
+  },
+  "events": [],
+  "background": [
+    {
+      "path": "A",
+      "rate_mbit": 8
+    },
+    {
+      "path": "B",
+      "rate_mbit": 8
+    }
+  ],
+  "shared": {
+    "forward": {
+      "rate_mbit": 10,
+      "limit": 100
+    },
+    "reverse": {}
+  }
+}

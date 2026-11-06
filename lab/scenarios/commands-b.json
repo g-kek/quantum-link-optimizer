@@ -1,0 +1,34 @@
+{
+  "name": "commands-b",
+  "topology": "independent",
+  "duration_s": 30,
+  "interval_s": 0.1,
+  "paths": {
+    "A": {
+      "forward": {
+        "delay_ms": 10
+      },
+      "reverse": {
+        "delay_ms": 10
+      }
+    },
+    "B": {
+      "forward": {
+        "delay_ms": 10
+      },
+      "reverse": {
+        "delay_ms": 10
+      }
+    }
+  },
+  "events": [],
+  "background": [],
+  "commands": {
+    "path": "B",
+    "count": 20,
+    "interval_s": 0.05,
+    "deadline_s": 1,
+    "rotate_after": 5,
+    "kms_config": "lab/kms/normal.json"
+  }
+}

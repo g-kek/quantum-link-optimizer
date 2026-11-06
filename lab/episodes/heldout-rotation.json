@@ -1,0 +1,26 @@
+{
+  "split": "final_test",
+  "seed": 1007,
+  "path": "A",
+  "count": 35,
+  "interval_s": 0.007,
+  "deadline_s": 1,
+  "rotate_after": 3,
+  "queue_limit": 32,
+  "kms": {
+    "capacity": 16,
+    "initial": 2,
+    "refill_per_s": 2,
+    "delay_s": 0,
+    "mode": "shared"
+  },
+  "network": {},
+  "events": [
+    {
+      "at_s": 0.1,
+      "state": {
+        "refilling": false
+      }
+    }
+  ]
+}
