@@ -60,7 +60,12 @@ def test_real_udp_ack_retry_and_rotation(tmp_path, path):
     asyncio.run(exercise())
 
 
-def test_restart_late_duplicate_order_and_conflict(tmp_path):
+def test_restart_late_duplicate_order_and_conflict(tmp_path, monkeypatch):
+    # Exercise ordering and expiry independently of filesystem/CI scheduling.
+    now = time.monotonic_ns()
+    monkeypatch.setattr(
+        "quantum_link_optimizer.commands.store.time.monotonic_ns", lambda: now
+    )
     path = tmp_path / "state.sqlite"
     body = {
         "id": "id",

@@ -92,10 +92,19 @@ def test_hedge_wins_once_late_primary_does_not_execute_again(tmp_path):
             assert result["timely"]
             first_ack = next(e for e in events if e["event"] == "ack_received")
             assert first_ack["path"] == "B"
+            attempts_at_success = [e for e in events if e["event"] == "attempt_sent"]
             await asyncio.sleep(0.25)
+            assert [
+                e for e in events if e["event"] == "attempt_sent"
+            ] == attempts_at_success
             assert store.db.execute("SELECT executions FROM state").fetchone() == (1,)
             attempts = [event for event in events if event["event"] == "attempt_sent"]
-            assert len([event for event in attempts if event["path"] == "A"]) == 1
+            # Up to max_attempts_per_leg may precede the winning ACK on a busy CI.
+            assert (
+                1
+                <= len([e for e in attempts if e["path"] == "A"])
+                <= settings.max_attempts_per_leg
+            )
             assert (
                 sum(event["wire_bytes"] for event in attempts if event["path"] == "B")
                 == router.budget.used

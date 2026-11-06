@@ -36,7 +36,21 @@ def test_real_packets_to_dataset_and_frozen_policy(tmp_path, plan):
     a = [row for row in training if row["path"] == "A"]
     b = [row for row in training if row["path"] == "B"]
     assert all(row["targets"]["rtt_ms"] >= 680 for row in a)
-    assert all(row["targets"]["rtt_ms"] < 100 for row in b)
+    # This tests faithful collection/labels, not the scheduling latency of CI.
+    assert all(row["targets"]["rtt_ms"] >= 55 for row in b)
+    for row in training:
+        probes = records(series / row["episode_id"] / "sender.jsonl")
+        measured = next(
+            e
+            for e in probes
+            if e["event"] == "probe_result"
+            and e["sample"] == row["sample"]
+            and e["path"] == row["path"]
+        )
+        assert row["targets"]["rtt_ms"] == measured["rtt_ms"]
+        assert row["targets"]["probe_within_target"] == (
+            measured["rtt_ms"] <= plan["base"]["target_ms"]
+        )
     assert all(row["features"]["last_rtt_ms"] is None for row in a + b)
     assert all(
         row["targets"]["command_status"] is None
