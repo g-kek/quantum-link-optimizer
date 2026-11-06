@@ -73,6 +73,12 @@ class Observations:
                 )
             result[path] = {
                 **receiver,
+                "sender_queue_observation_age_ms": (
+                    now_ns - self.history.queues[path]["algorithm_available_ns"]
+                )
+                / 1e6
+                if path in self.history.queues
+                else None,
                 "receiver_observation_age_ms": (now_ns - ack["available_ns"]) / 1e6
                 if ack
                 else None,

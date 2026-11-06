@@ -1,0 +1,388 @@
+{
+  "checked_date": "2026-11-07",
+  "code_commit": "9668bb08b7945e72209468c4918d3e5229bb3291",
+  "linux_run": "https://github.com/g-kek/quantum-link-optimizer/actions/runs/42293533647",
+  "regression_run": "https://github.com/g-kek/quantum-link-optimizer/actions/runs/42293533562",
+  "junit": {
+    "tests": "100",
+    "failures": "0",
+    "errors": "0",
+    "skipped": "0",
+    "time": "170.247"
+  },
+  "method": "Functional acceptance: three repetitions of each of six scenarios; RTT percentiles describe received replies, losses reported separately. No inference about the real operator network.",
+  "scenarios": [
+    {
+      "scenario": "congestion-False-0",
+      "status": "collected",
+      "A": {
+        "sent": 712,
+        "received": 257,
+        "loss_fraction": 0.6390449438202247,
+        "median_rtt_ms": 386.0,
+        "p95_rtt_ms": 1085.0,
+        "max_reply_gap_s": 0.465656042098999
+      },
+      "B": {
+        "sent": 798,
+        "received": 797,
+        "loss_fraction": 0.0012531328320801727,
+        "median_rtt_ms": 10.0,
+        "p95_rtt_ms": 10.0,
+        "max_reply_gap_s": 0.010233879089355469
+      },
+      "max_backlog_bytes": 137864,
+      "max_qdisc_drops": 3904
+    },
+    {
+      "scenario": "congestion-True-0",
+      "status": "collected",
+      "A": {
+        "sent": 700,
+        "received": 202,
+        "loss_fraction": 0.7114285714285714,
+        "median_rtt_ms": 278.0,
+        "p95_rtt_ms": 1011.0,
+        "max_reply_gap_s": 0.31306910514831543
+      },
+      "B": {
+        "sent": 701,
+        "received": 191,
+        "loss_fraction": 0.7275320970042796,
+        "median_rtt_ms": 321.0,
+        "p95_rtt_ms": 1001.0,
+        "max_reply_gap_s": 0.2892160415649414
+      },
+      "max_backlog_bytes": 126728,
+      "max_qdisc_drops": 4384
+    },
+    {
+      "scenario": "congestion-False-1",
+      "status": "collected",
+      "A": {
+        "sent": 718,
+        "received": 219,
+        "loss_fraction": 0.6949860724233983,
+        "median_rtt_ms": 296.0,
+        "p95_rtt_ms": 1130.0,
+        "max_reply_gap_s": 0.9901421070098877
+      },
+      "B": {
+        "sent": 798,
+        "received": 797,
+        "loss_fraction": 0.0012531328320801727,
+        "median_rtt_ms": 10.0,
+        "p95_rtt_ms": 10.0,
+        "max_reply_gap_s": 0.010293006896972656
+      },
+      "max_backlog_bytes": 146216,
+      "max_qdisc_drops": 3946
+    },
+    {
+      "scenario": "congestion-True-1",
+      "status": "collected",
+      "A": {
+        "sent": 705,
+        "received": 149,
+        "loss_fraction": 0.7886524822695036,
+        "median_rtt_ms": 76.5,
+        "p95_rtt_ms": 1090.0,
+        "max_reply_gap_s": 0.6745920181274414
+      },
+      "B": {
+        "sent": 709,
+        "received": 181,
+        "loss_fraction": 0.7447108603667136,
+        "median_rtt_ms": 243.0,
+        "p95_rtt_ms": 1068.0,
+        "max_reply_gap_s": 1.19905686378479
+      },
+      "max_backlog_bytes": 139256,
+      "max_qdisc_drops": 4445
+    },
+    {
+      "scenario": "congestion-False-2",
+      "status": "collected",
+      "A": {
+        "sent": 713,
+        "received": 251,
+        "loss_fraction": 0.6479663394109396,
+        "median_rtt_ms": 375.0,
+        "p95_rtt_ms": 1097.0,
+        "max_reply_gap_s": 0.42989683151245117
+      },
+      "B": {
+        "sent": 798,
+        "received": 797,
+        "loss_fraction": 0.0012531328320801727,
+        "median_rtt_ms": 10.0,
+        "p95_rtt_ms": 10.0,
+        "max_reply_gap_s": 0.010519981384277344
+      },
+      "max_backlog_bytes": 140648,
+      "max_qdisc_drops": 3928
+    },
+    {
+      "scenario": "congestion-True-2",
+      "status": "collected",
+      "A": {
+        "sent": 706,
+        "received": 190,
+        "loss_fraction": 0.7308781869688386,
+        "median_rtt_ms": 378.0,
+        "p95_rtt_ms": 1068.0,
+        "max_reply_gap_s": 0.5880050659179688
+      },
+      "B": {
+        "sent": 703,
+        "received": 157,
+        "loss_fraction": 0.7766714082503556,
+        "median_rtt_ms": 132.0,
+        "p95_rtt_ms": 1068.0,
+        "max_reply_gap_s": 0.46723508834838867
+      },
+      "max_backlog_bytes": 137864,
+      "max_qdisc_drops": 4407
+    },
+    {
+      "scenario": "reverse-0",
+      "status": "collected",
+      "A": {
+        "sent": 542,
+        "received": 533,
+        "loss_fraction": 0.016605166051660514,
+        "median_rtt_ms": 100.0,
+        "p95_rtt_ms": 100.0,
+        "max_reply_gap_s": 0.012019157409667969
+      },
+      "B": {
+        "sent": 598,
+        "received": 597,
+        "loss_fraction": 0.0016722408026755842,
+        "median_rtt_ms": 10.0,
+        "p95_rtt_ms": 10.0,
+        "max_reply_gap_s": 0.010489940643310547
+      }
+    },
+    {
+      "scenario": "reverse-1",
+      "status": "collected",
+      "A": {
+        "sent": 542,
+        "received": 532,
+        "loss_fraction": 0.01845018450184499,
+        "median_rtt_ms": 100.0,
+        "p95_rtt_ms": 100.0,
+        "max_reply_gap_s": 0.012006998062133789
+      },
+      "B": {
+        "sent": 598,
+        "received": 597,
+        "loss_fraction": 0.0016722408026755842,
+        "median_rtt_ms": 10.0,
+        "p95_rtt_ms": 10.0,
+        "max_reply_gap_s": 0.010483980178833008
+      }
+    },
+    {
+      "scenario": "reverse-2",
+      "status": "collected",
+      "A": {
+        "sent": 541,
+        "received": 532,
+        "loss_fraction": 0.01663585951940849,
+        "median_rtt_ms": 100.0,
+        "p95_rtt_ms": 100.0,
+        "max_reply_gap_s": 0.012274026870727539
+      },
+      "B": {
+        "sent": 598,
+        "received": 597,
+        "loss_fraction": 0.0016722408026755842,
+        "median_rtt_ms": 10.0,
+        "p95_rtt_ms": 10.0,
+        "max_reply_gap_s": 0.010513782501220703
+      }
+    },
+    {
+      "scenario": "loss-0",
+      "status": "collected",
+      "A": {
+        "sent": 572,
+        "received": 293,
+        "loss_fraction": 0.4877622377622378,
+        "median_rtt_ms": 10.0,
+        "p95_rtt_ms": 10.0,
+        "max_reply_gap_s": 0.10896611213684082
+      },
+      "B": {
+        "sent": 598,
+        "received": 597,
+        "loss_fraction": 0.0016722408026755842,
+        "median_rtt_ms": 10.0,
+        "p95_rtt_ms": 10.0,
+        "max_reply_gap_s": 0.010071039199829102
+      }
+    },
+    {
+      "scenario": "loss-1",
+      "status": "collected",
+      "A": {
+        "sent": 572,
+        "received": 301,
+        "loss_fraction": 0.47377622377622375,
+        "median_rtt_ms": 10.0,
+        "p95_rtt_ms": 10.0,
+        "max_reply_gap_s": 0.09785294532775879
+      },
+      "B": {
+        "sent": 598,
+        "received": 597,
+        "loss_fraction": 0.0016722408026755842,
+        "median_rtt_ms": 10.0,
+        "p95_rtt_ms": 10.0,
+        "max_reply_gap_s": 0.010307073593139648
+      }
+    },
+    {
+      "scenario": "loss-2",
+      "status": "collected",
+      "A": {
+        "sent": 569,
+        "received": 263,
+        "loss_fraction": 0.5377855887521968,
+        "median_rtt_ms": 10.0,
+        "p95_rtt_ms": 10.0,
+        "max_reply_gap_s": 0.08702802658081055
+      },
+      "B": {
+        "sent": 598,
+        "received": 597,
+        "loss_fraction": 0.0016722408026755842,
+        "median_rtt_ms": 10.0,
+        "p95_rtt_ms": 10.0,
+        "max_reply_gap_s": 0.010393857955932617
+      }
+    },
+    {
+      "scenario": "outage-0",
+      "status": "collected",
+      "A": {
+        "sent": 401,
+        "received": 399,
+        "loss_fraction": 0.004987531172069848,
+        "median_rtt_ms": 10.0,
+        "p95_rtt_ms": 10.1,
+        "max_reply_gap_s": 2.086716890335083
+      },
+      "B": {
+        "sent": 597,
+        "received": 596,
+        "loss_fraction": 0.0016750418760469454,
+        "median_rtt_ms": 10.0,
+        "p95_rtt_ms": 10.1,
+        "max_reply_gap_s": 0.010406017303466797
+      }
+    },
+    {
+      "scenario": "outage-1",
+      "status": "collected",
+      "A": {
+        "sent": 402,
+        "received": 400,
+        "loss_fraction": 0.00497512437810943,
+        "median_rtt_ms": 10.0,
+        "p95_rtt_ms": 10.1,
+        "max_reply_gap_s": 2.0834949016571045
+      },
+      "B": {
+        "sent": 598,
+        "received": 597,
+        "loss_fraction": 0.0016722408026755842,
+        "median_rtt_ms": 10.0,
+        "p95_rtt_ms": 10.0,
+        "max_reply_gap_s": 0.010352849960327148
+      }
+    },
+    {
+      "scenario": "outage-2",
+      "status": "collected",
+      "A": {
+        "sent": 402,
+        "received": 400,
+        "loss_fraction": 0.00497512437810943,
+        "median_rtt_ms": 10.0,
+        "p95_rtt_ms": 10.1,
+        "max_reply_gap_s": 2.078904151916504
+      },
+      "B": {
+        "sent": 598,
+        "received": 597,
+        "loss_fraction": 0.0016722408026755842,
+        "median_rtt_ms": 10.0,
+        "p95_rtt_ms": 10.0,
+        "max_reply_gap_s": 0.01023411750793457
+      }
+    },
+    {
+      "scenario": "reorder-0",
+      "status": "collected",
+      "A": {
+        "sent": 815,
+        "received": 808,
+        "loss_fraction": 0.008588957055214674,
+        "median_rtt_ms": 85.0,
+        "p95_rtt_ms": 85.0,
+        "max_reply_gap_s": 0.035227060317993164
+      },
+      "B": {
+        "sent": 598,
+        "received": 597,
+        "loss_fraction": 0.0016722408026755842,
+        "median_rtt_ms": 10.0,
+        "p95_rtt_ms": 10.1,
+        "max_reply_gap_s": 0.010493993759155273
+      }
+    },
+    {
+      "scenario": "reorder-1",
+      "status": "collected",
+      "A": {
+        "sent": 828,
+        "received": 823,
+        "loss_fraction": 0.006038647342995196,
+        "median_rtt_ms": 5.07,
+        "p95_rtt_ms": 85.0,
+        "max_reply_gap_s": 0.04024100303649902
+      },
+      "B": {
+        "sent": 598,
+        "received": 597,
+        "loss_fraction": 0.0016722408026755842,
+        "median_rtt_ms": 10.0,
+        "p95_rtt_ms": 10.1,
+        "max_reply_gap_s": 0.010271072387695312
+      }
+    },
+    {
+      "scenario": "reorder-2",
+      "status": "collected",
+      "A": {
+        "sent": 825,
+        "received": 818,
+        "loss_fraction": 0.00848484848484854,
+        "median_rtt_ms": 5.035,
+        "p95_rtt_ms": 85.0,
+        "max_reply_gap_s": 0.034728050231933594
+      },
+      "B": {
+        "sent": 598,
+        "received": 597,
+        "loss_fraction": 0.0016722408026755842,
+        "median_rtt_ms": 10.0,
+        "p95_rtt_ms": 10.0,
+        "max_reply_gap_s": 0.010187864303588867
+      }
+    }
+  ]
+}

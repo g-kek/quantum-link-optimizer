@@ -67,6 +67,40 @@ class Topology:
             self.route("r", "10.250.0.0/24", "10.240.5.1")
             self.points["shared"] = (("c", "to-r"), ("r", "to-c"))
 
+    def warm_paths(self):
+        # Resolve neighbors before netem: losing ARP is not a packet-loss sample
+        # of the measured ICMP flow and can suppress it for the whole short run.
+        for index in (1, 2):
+            self.execute(
+                "s",
+                "ping",
+                "-n",
+                "-c",
+                "1",
+                "-W",
+                "2",
+                "-I",
+                f"10.250.0.{index}",
+                f"10.250.1.{index}",
+            )
+
+    def set_path_state(self, path, action):
+        branch = path.lower()
+        self.execute(branch, "ip", "link", "set", "to-s", action)
+        if action == "up":
+            # Linux deletes static routes using an administratively down interface.
+            # Bringing veth back restores the connected subnet, not this return route.
+            index = 1 if path == "A" else 2
+            self.execute(
+                branch,
+                "ip",
+                "route",
+                "replace",
+                f"10.250.0.{index}",
+                "via",
+                f"10.240.{index}.1",
+            )
+
     def create_kms(self):
         run("ip", "netns", "add", self.ns("k"))
         self.created.append(self.ns("k"))

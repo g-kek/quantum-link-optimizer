@@ -123,7 +123,9 @@ def test_online_controller_selects_actual_b_namespace_route(tmp_path):
 
     config = load_config(Path("lab/scenarios/online-selection.json"))
     config["duration_s"] = 3
-    config["commands"].update(count=3, interval_s=0.1)
+    config["commands"].update(count=3, interval_s=0.1, warmup_s=0.6)
+    # Isolate route selection from startup hysteresis (covered in policy tests).
+    config["commands"]["routing"]["min_hold_ms"] = 0
     output = tmp_path / "online"
     run_scenario(config, output)
     summary = json.loads((output / "routing-summary.json").read_text())

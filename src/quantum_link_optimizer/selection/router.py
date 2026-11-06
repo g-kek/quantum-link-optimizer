@@ -144,6 +144,7 @@ class Router:
                     self.settings.shared_segment,
                     self.queue.qsize(),
                     self.settings.target_ms,
+                    self.settings.max_age_ms,
                 ),
                 local_queue_depth=self.queue.qsize(),
             )
