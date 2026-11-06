@@ -1,9 +1,6 @@
-# Методика базового RTT-эксперимента
+# Методика экспериментов
 
-Здесь собраны подробности команды `experiment`: формат синтетики, обучение,
-метрики и проверенный результат. Начать работу можно с [README](../README.md).
-Для предупреждений, селектора с учётом риска и replay есть отдельные протоколы:
-[warning](early-warning.md), [risk](risk-selection.md), [shadow](shadow-replay.md).
+Синтетические и внешние ряды имеют разное происхождение; численные примеры ниже — исторические результаты конкретных запусков, не характеристики оператора.
 
 ## Работа с готовым рядом
 
@@ -158,3 +155,44 @@ SLA в реальной сети. Для исследования нужны н�
 перебора на коротком ряду. GitHub Actions запускает Ruff и pytest.
 Сгенерированные данные, веса, артефакты и окружение исключены из Git.
 
+
+## Предупреждения, риск и replay
+
+```bash
+uv run quantum-link warning-experiment --seed 42 --epochs 40 --output artifacts/warning
+uv run quantum-link risk-experiment --seed 42 --scenario normal --output artifacts/risk
+uv run quantum-link shadow-replay --model artifacts/risk/warning-model.pt --synthetic-input artifacts/risk/telemetry.csv --output artifacts/replay
+uv run quantum-link benchmark-suite --seeds 41 42 43 --samples 4000 --epochs 40 --output artifacts/benchmark
+uv run quantum-link atlas-benchmark --input path/to/atlas.json --output artifacts/atlas
+```
+
+Warning оценивает вероятность превышения RTT по горизонтам 1/5/15/60 samples;
+длинный горизонт не равен риску следующего шага. Целевые окна, пересекающие
+train/validation/test, исключаются; preprocessing обучается только на train.
+Порог тревоги выбирается на validation. Сравниваются Brier, precision/recall,
+ложные тревоги и lead time с persistence и train-frequency baseline.
+В эпизодной оценке каждой тревоге соответствует не больше одного eligible onset;
+пустой знаменатель — null. Будущие onset используются только для оценки.
+
+Risk selector минимизирует
+`J(c) = predicted_rtt_ms(c) + violation_penalty_ms * p(c) + switching_cost_ms * I(c != current)`.
+Линейный штраф — заданная полезность, не гарантия SLA. В offline risk-эксперименте
+по умолчанию hold 5 samples, hysteresis 3 мс, switching cost 3 мс;
+у онлайн-политики настройки отдельные. Для сравнения baseline получают одинаковые
+ограничения. Oracle знает исход и служит только границей replay.
+
+В shadow сначала сохраняется decision с information cutoff, затем раскрывается
+outcome/evaluation. `network_action=none_shadow_only`: этот режим не переключает
+оборудование. Модель/scaler не меняются; проверяются хеш префикса train+validation,
+границы, provenance и версия checkpoint. Для внешней телеметрии требуется
+явный `--allow-domain-shift`; это не доказывает переносимость модели.
+
+Benchmark сравнивает normal/shared-stress на seeds 41/42/43. Shared-stress
+сдвигает весь ряд до split, а не моделирует внезапный domain shift. Replay
+должен совпасть с batch по решениям, среднему RTT (допуск 1e-10 мс) и переключениям.
+Согласованность расчёта не является доказательством преимущества ML.
+
+Для живого управления нужен отдельный опыт: политика меняет нагрузку и очередь,
+поэтому replay неизменного ряда не измеряет этот эффект. См. [выбор пути](../control/path-selection.md)
+и [приёмку](../validation/acceptance.md). Подробности схем находятся в `warning.py`,
+`risk.py`, `shadow.py`, `suite.py`; параметры запуска — в CLI `--help`.

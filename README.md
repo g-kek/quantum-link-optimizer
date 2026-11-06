@@ -11,8 +11,9 @@
 пока не предоставлены. MVP готов для демонстрации на маркированной синтетике
 и анализа внешнего CSV; снижение реальных 700 → 100 мс пока не подтверждено.
 
-[Запуск и данные](docs/mvp.md) · [Исследование задачи](docs/research-and-mvp.md) ·
-[Контекст МКС РЖД](docs/rzd-network-context.md) · [Источники](docs/data-sources.md)
+[Документация](docs/README.md) · [Запуск и CSV](docs/guide/quickstart.md) ·
+[План развития](docs/planning/roadmap.md) · [Восемь задач](docs/planning/backlog.md) ·
+[Приёмка MVP](docs/validation/acceptance.md)
 
 ![Интерактивный отчёт о задержке двух путей](docs/assets/demo.png)
 
@@ -28,9 +29,7 @@ uv sync --locked --python 3.12
 uv run quantum-link demo --output artifacts/demo
 ```
 
-Откройте `artifacts/demo/index.html` в браузере. До публикации локальных
-коммитов этот запуск доступен в подготовленном локальном `main`;
-удалённый `origin/main` ещё содержит исходную версию репозитория.
+Откройте `artifacts/demo/index.html` в браузере. Актуальный код опубликован в `main`.
 
 По умолчанию демонстрация генерирует 4000 измерений со значениями около
 700 мс, обучает небольшую модель на CPU и проверяет решения на последних 20%
@@ -81,7 +80,7 @@ sample,timestamp,path,status,rtt_ms,source,provenance
 успешной доставкой. По умолчанию история старше 2 секунд считается устаревшей:
 при другой частоте проб задайте `--max-gap-seconds`.
 
-Подробная [схема входа и трактовка метрик](docs/mvp.md#внешняя-телеметрия).
+Подробная [схема входа и трактовка метрик](docs/guide/quickstart.md#внешняя-телеметрия).
 
 ## Артефакты
 
@@ -123,9 +122,9 @@ uv run quantum-link benchmark-suite --output artifacts/benchmark
 uv run quantum-link --help
 ```
 
-Описание отдельных экспериментов: [RTT](docs/experiment-methodology.md),
-[предупреждения](docs/early-warning.md), [выбор пути](docs/risk-selection.md),
-[shadow replay и Atlas](docs/shadow-replay.md).
+Методика прогнозирования и replay: [эксперименты](docs/research/experiments.md).
+Онлайн-передача: [команды и ключи](docs/lab/commands-and-keys.md),
+[выбор пути](docs/control/path-selection.md), [данные](docs/data/datasets.md).
 
 ## Разработка
 
@@ -138,9 +137,8 @@ uv build --wheel
 
 Код находится в `src/quantum_link_optimizer/`, тесты — в `tests/`.
 HTML-шаблон поставляется внутри Python-пакета. CI проверяет Python 3.12/3.13.
-Рабочая основа теперь собрана в `main`; ветки `feat/telemetry-foundation`,
-`feat/rtt-forecasting`, `feat/degradation-warning`, `feat/risk-aware-selection`
-и `feat/shadow-replay` сохраняют историю этапов.
+Основная ветка — `main`; рабочая — `network-control-platform`. История ранних
+экспериментов включена в `main`, отдельные экспериментальные ветки удалены.
 
 Следующий этап — парная телеметрия целевых путей, подтверждение интерфейса
 переключения и shadow-пилот на независимом периоде.

@@ -7,6 +7,6 @@ __pycache__/
 dist/
 build/
 artifacts/
-data/
+/data/
 *.pt
 .DS_Store
