@@ -1,24 +1,17 @@
 # Документация
 
-Документы сгруппированы по назначению. Исторические черновики и дубли удалены;
-история коммитов сохраняет прежние версии.
-
-| Группа | Документ | Что искать |
-| --- | --- | --- |
-| Начало работы | [Запуск и входные данные](guide/quickstart.md) | Демо, CSV-аудит, метрики отчёта |
-| Исследование | [Контекст и источники](research/context-and-sources.md) | МКС, границы доступа, реальные и синтетические данные |
-| Исследование | [Методика экспериментов](research/experiments.md) | Прогноз, warning/risk, replay, причинность и ограничения |
-| Исследование | [Польза прогноза](research/forecast-benefit.md) | Train-only модель, живые абляции и результат #6 |
-| Стенд | [Сеть Linux](lab/network.md) | Namespace/veth, netem, очереди, capture и очистка |
-| Стенд | [Команды и ключи](lab/commands-and-keys.md) | Sender/receiver, ACK, dedup, KMS, ротация |
-| Данные | [Телеметрия](data/telemetry.md) | События, времена, manifest, quality и план расширения |
-| Данные | [Датасеты и инциденты](data/datasets.md) | Сбор, признаки, freeze/final, оборудование и часы |
-| Управление | [Выбор пути](control/path-selection.md) | EWMA, pacing, копии и диагностика |
-| План | [Развитие экосистемы](planning/roadmap.md) | Текущее состояние, этапы и критерии перехода |
-| План | [Восемь задач](planning/backlog.md) | Checklist, приёмка и зависимости |
-| Проверки | [Независимые испытания](validation/independent-trials.md) | Final, задержки, очередь и ограничения #7 |
-| Проверки | [Приёмка MVP](validation/acceptance.md) | Результаты #1–5 и доказательства, остатки #6–7 |
-
-Для разработки: [CONTRIBUTING](../CONTRIBUTING.md). Основная ветка — `main`,
-рабочее направление — `network-control/path-selection`. Ветки `stand/*`
-сохранены для воспроизведения стендовых экспериментов.
+| Раздел | Содержание |
+| --- | --- |
+| [Запуск](guide/quickstart.md) | HTML, собственный CSV, воспроизведение опытов |
+| [Результаты прогноза](research/forecast-benefit.md) | Обучение и сравнение с EWMA |
+| [Независимые испытания](validation/independent-trials.md) | Доставка, overhead, очереди и ограничения |
+| [Приёмка #1–5](validation/acceptance.md) | Сетевые сценарии и диагностика |
+| [Linux-стенд](lab/network.md) | Namespaces, netem, PCAP |
+| [Команды и KMS](lab/commands-and-keys.md) | Защита, ключи, ACK и dedup |
+| [Выбор пути](control/path-selection.md) | EWMA, копии и pacing |
+| [Телеметрия](data/telemetry.md) | События, времена и потери |
+| [Датасеты](data/datasets.md) | Сбор, разбиения и freeze |
+| [Методика](research/experiments.md) | RTT-прогноз, replay и метрики |
+| [Контекст](research/context-and-sources.md) | Исходные данные и вопросы оператору |
+| [План](planning/roadmap.md) | Этапы развития |
+| [Задачи](planning/backlog.md) | Восемь групп работ |

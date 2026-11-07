@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Результаты испытаний</title>
+<style>__STYLE__</style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">ЛАБОРАТОРНЫЕ ИСПЫТАНИЯ</p>
+    <h1>От команды до подтверждения</h1>
+    <p class="lead">RTT, команды, очередь и ключи</p>
+    <div class="tags"><span>Реальные UDP / TCP-сокеты</span><span>Независимые final-эпизоды</span><span>Без внешних запросов</span></div>
+  </header>
+
+  <section class="cards" aria-label="Результаты исследования">
+    <article><p>Польза прогноза</p><strong id="verdict"></strong><small id="effect"></small></article>
+    <article><p>Независимые эпизоды</p><strong id="episodes"></strong><small>Одинаковая нагрузка для всех политик</small></article>
+    <article class="warning"><p>Бюджет 1000/с × 1024 байта</p><strong>Не подтверждён</strong><small>Измерены скалярные команды около 310 UDP-байт</small></article>
+  </section>
+
+  <section class="panel">
+    <div class="section-title"><div><p class="eyebrow">01 · РАЗБОР ОПЫТА</p><h2>Что происходило с командой</h2></div><button id="export">Скачать данные JSON</button></div>
+    <div class="filters">
+      <label>Сценарий<select id="case"></select></label>
+      <label>Seed<select id="seed"></select></label>
+      <label>Политика<select id="policy"></select></label>
+    </div>
+    <p id="scenario-description" class="muted"></p>
+    <div class="trial-stats" id="trial-stats"></div>
+    <div class="legend"><span class="a">● A: RTT проб</span><span class="b">● B: RTT проб</span><span class="ok">◆ Команда с ACK в срок</span><span class="bad">◆ Просрочка / отказ / неизвестный исход</span></div>
+    <svg id="chart" viewBox="0 0 1000 330" role="img" aria-label="RTT проб и полная задержка команд"></svg>
+    <div class="playback"><button id="play">Воспроизвести</button><label class="slider">Время<input id="time" type="range" min="0" max="1000" value="1000"></label><output id="time-label"></output></div>
+    <p class="muted">Пунктир — 100 мс · Исходы раскрываются по журналу · Счётчики за весь эпизод</p>
+    <div class="detail-grid">
+      <article><h3>Последнее решение</h3><pre id="decision"></pre></article>
+      <article><h3>Наблюдавшиеся ключи и очередь</h3><pre id="state"></pre></article>
+    </div>
+    <details><summary>Внесённые воздействия — только для проверки</summary><p class="muted">Ground truth стенда, недоступная контроллеру</p><pre id="truth"></pre></details>
+  </section>
+
+  <section class="panel">
+    <p class="eyebrow">02 · СОПОСТАВИМЫЕ ПОЛИТИКИ</p><h2>Команды в срок</h2>
+    <p class="muted">Все поступления включены в знаменатель · Байты копий: UDP payload + IPv4/UDP без ACK и проб</p>
+    <div class="table-wrap"><table><thead><tr><th>Политика</th><th>ACK ≤100 мс / поступило</th><th>Неизвестные исходы</th><th>Байты копий</th></tr></thead><tbody id="comparison"></tbody></table></div>
+  </section>
+
+  <section class="panel">
+    <p class="eyebrow">03 · ЦЕНА УПРАВЛЕНИЯ</p><h2>Затраты на обработку</h2>
+    <p class="muted">1000 команд/с · Задержка генератора включена · Deferred откладывает запись на диск</p>
+    <div class="table-wrap"><table><thead><tr><th>Режим</th><th>Журнал</th><th>В срок / поступило</th><th>Решение p99, мкс</th><th>Наблюдаемые spans p99, мс</th><th>CPU процесса, с</th></tr></thead><tbody id="performance"></tbody></table></div>
+    <p class="muted">Spans охватывают часть обработки · CPU измерен для общего процесса sender/receiver/KMS/relay</p>
+  </section>
+
+
+  <details class="panel"><summary>Происхождение и границы результатов</summary><pre id="sources"></pre></details>
+</main>
+<script id="report-data" type="application/json">__DATA__</script>
+<script>__SCRIPT__</script>
+</body>
+</html>

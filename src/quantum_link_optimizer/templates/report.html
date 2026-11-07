@@ -435,17 +435,14 @@
         <div class="brand">
           <span class="symbol" aria-hidden="true"></span>Quantum Link Optimizer
         </div>
-        <span class="nav-note">RTT Lab / Москва — Краснодар</span>
+        <span class="nav-note">RTT Lab</span>
       </nav>
       <header>
         <div>
-          <div class="eyebrow">Исследовательский MVP · анализ двух путей</div>
-          <h1 id="title">Два пути. Один выбор.</h1>
+          <div class="eyebrow">RTT двух путей</div>
+          <h1 id="title">Выбор пути</h1>
           <span class="badge" id="source"></span>
-          <p class="subtitle">
-            Проверяем, когда выбор канала помогает сократить RTT — и где
-            проходит предел этого подхода.
-          </p>
+          <p class="subtitle">RTT и сравнение политик</p>
         </div>
         <div class="actions">
           <label class="upload"
@@ -555,8 +552,7 @@
             <div>
               <h2>Сравнение политик</h2>
               <p class="small">
-                Весь период оценки. Метрики RTT — только по известным исходам;
-                сравнивайте покрытие и отказы.
+                Весь период · RTT по известным исходам · Покрытие и отказы показаны отдельно
               </p>
             </div>
           </div>
@@ -581,11 +577,6 @@
         <section class="panel method">
           <h2>Условия эксперимента</h2>
           <p id="method"></p>
-          <p>
-            Штраф переключения — параметр расчёта. Реального переключения, его
-            простоя и влияния нагрузки здесь нет. Ping RTT не измеряет QBER,
-            скорость выработки ключей или точность PTP.
-          </p>
           <p id="config"></p>
           <details>
             <summary>Происхождение и воспроизводимость</summary>
@@ -602,8 +593,7 @@
     </div>
     <noscript
       ><p>
-        Для интерактивного отчёта включите JavaScript. Метрики доступны в
-        соседнем report.json.
+        Включите JavaScript или откройте report.json
       </p></noscript
     >
     <script id="report-data" type="application/json">
@@ -752,11 +742,11 @@
         }
         $("method").textContent =
           d.kind === "synthetic_demo"
-            ? `Синтетика, seed ${d.seed}, сценарий ${d.scenario}. Модель обучена на первых 60%, эпоха выбрана по следующим 20%; здесь показан финальный тест. Веса фиксированы; решения replay сверены с пакетной оценкой. Сценарий high-rtt добавляет 625 мс к обоим путям и не калиброван по МКС РЖД.`
-            : "Анализ внешнего CSV без обучения и без переноса синтетической модели. Оценены все шаги после первого. Previous RTT и EWMA используют только прошлую историю; alpha EWMA = 0,3. Тайм-ауты и пропуски сохранены отдельно. Признак real_telemetry задаётся поставщиком CSV и сам по себе не подтверждает происхождение.";
+            ? `Синтетика · seed ${d.seed} · ${d.scenario} · финальные 20% ряда`
+            : "Внешний CSV · без обучения · история только до решения";
         const c = d.configuration;
         $("config").textContent =
-          `Удержание: ${c.min_hold_samples} измерений · гистерезис: ${fmt(c.hysteresis_ms)} мс · стоимость переключения: ${fmt(c.switching_cost_ms)} мс.`;
+          `Удержание: ${c.min_hold_samples} измерений · гистерезис: ${fmt(c.hysteresis_ms)} мс · стоимость переключения: ${fmt(c.switching_cost_ms)} мс`;
         $("provenance").textContent = JSON.stringify(
           {
             runtime: d.runtime,

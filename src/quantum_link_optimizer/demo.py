@@ -53,7 +53,7 @@ def run_demo(output: Path, samples=4000, seed=42, epochs=40, scenario="high-rtt"
         )
     report = {
         "kind": "synthetic_demo",
-        "title": "Два пути. Один выбор.",
+        "title": "Выбор пути",
         "source_label": "Синтетический сценарий · не измерения МКС РЖД",
         "runtime": runtime_metadata(),
         "samples_total": samples,
