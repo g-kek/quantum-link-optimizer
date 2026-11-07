@@ -1,0 +1,7 @@
+{
+  "seed": 900023,
+  "messages": 200,
+  "rate_per_s": 1000,
+  "delay_per_direction_ms": 10,
+  "queue_limit": 4
+}

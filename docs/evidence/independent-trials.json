@@ -1,0 +1,1163 @@
+{
+  "schema_version": 1,
+  "scope": "Independent held-out laboratory episodes; not field-network validation",
+  "model_sha256": "2182f6b2eadbb1daa50ec1ee1e6aeb5e2362dbb656e8a5df45a943010d5ebd3d",
+  "policy_lock_sha256": "a7cdb814b09a4968e866c4d27705369cddb654f57549dffd8a1326ed64d76bf5",
+  "report_sha256": "04148f6d70b6add0fa0f19fcc090ac22cf214857d7613d165734d86cae2eb1c0",
+  "source_manifest_sha256": "d70f9f6e9095e86d85aea5ea433fc4f1afc180b04b2e91a6ee63442894054ea2",
+  "final_seeds": [
+    1009,
+    1013
+  ],
+  "final_trial_count": 96,
+  "paired_forecast_vs_ewma": {
+    "paired_episodes": 16,
+    "mean_difference": 0.0028409090909090884,
+    "interval_95": [
+      0.0,
+      0.008522727272727265
+    ],
+    "scope": "Descriptive episode bootstrap; repeated scenario families are not a field-network population"
+  },
+  "recommend_forecast": false,
+  "policy_totals": {
+    "fixed-a": {
+      "offered": 352,
+      "timely": 102,
+      "extra_bytes": 0,
+      "unknown": 104
+    },
+    "fixed-b": {
+      "offered": 352,
+      "timely": 23,
+      "extra_bytes": 0,
+      "unknown": 114
+    },
+    "ewma": {
+      "offered": 352,
+      "timely": 127,
+      "extra_bytes": 0,
+      "unknown": 103
+    },
+    "forecast": {
+      "offered": 352,
+      "timely": 128,
+      "extra_bytes": 0,
+      "unknown": 105
+    },
+    "ewma-copies": {
+      "offered": 352,
+      "timely": 137,
+      "extra_bytes": 65390,
+      "unknown": 100
+    },
+    "ewma-paced": {
+      "offered": 352,
+      "timely": 9,
+      "extra_bytes": 0,
+      "unknown": 80
+    }
+  },
+  "diagnostic_signal_counts": {
+    "kms_signal_true_positive_decisions": 93,
+    "kms_signal_false_positive_decisions": 0,
+    "kms_signal_false_negative_decisions": 358
+  },
+  "receiver_restarts_with_preserved_state": 12,
+  "duplicate_executions": 0,
+  "performance": {
+    "requested": {
+      "rate_per_s": 1000,
+      "messages": 1000,
+      "requested_application_bytes": 1024
+    },
+    "payload_contract": {
+      "requested_application_bytes": 1024,
+      "wire_limit_bytes": 1200,
+      "status": "unsupported",
+      "evidence": "datagram exceeds 1200-byte wire budget",
+      "reason": "The command contract is scalar set; 1024 application bytes are not interchangeable with 1024 UDP bytes."
+    },
+    "trials": [
+      {
+        "policy": "bypass",
+        "logging_mode": "sync",
+        "offered": 1000,
+        "completed": 1000,
+        "missing_completion": 0,
+        "timely_executed": 1000,
+        "timely_fraction": 1.0,
+        "executions": 1000,
+        "duplicate_executions": 0,
+        "switches": 0,
+        "keys_delivered": 1,
+        "key_policy_uses": {
+          "A": 0,
+          "B": 1000
+        },
+        "wire_bytes": 337560,
+        "extra_path_bytes": 0,
+        "statuses": {
+          "executed": 1000
+        },
+        "source_latency_ms": {
+          "count": 1000,
+          "mean": 0.778624499,
+          "p50": 0.730415,
+          "p95": 0.9746896999999994,
+          "p99": 1.5163569099999996
+        },
+        "source_clock": "Scheduled open-loop arrivals; generator scheduling lag is included in timely outcomes",
+        "end_to_end_ms": {
+          "count": 1000,
+          "mean": 0.662214049,
+          "p50": 0.620271,
+          "p95": 0.8482604499999999,
+          "p99": 1.2960724199999993
+        },
+        "successful_ack_ms": {
+          "count": 1000,
+          "mean": 0.662214049,
+          "p50": 0.620271,
+          "p95": 0.8482604499999999,
+          "p99": 1.2960724199999993
+        },
+        "decision_us": {
+          "count": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null,
+          "p99": null
+        },
+        "queue_and_pacing_ms": {
+          "count": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null,
+          "p99": null
+        },
+        "key_wait_ms": {
+          "count": 1000,
+          "mean": 0.012289630000000001,
+          "p50": 0.010459,
+          "p95": 0.016211049999999998,
+          "p99": 0.022963419999999995
+        },
+        "observed_handling_lower_bound_ms": {
+          "count": 1000,
+          "mean": 0.245208342,
+          "p50": 0.228937,
+          "p95": 0.34326629999999997,
+          "p99": 0.46314342
+        },
+        "schedule_lag_ms": {
+          "count": 1000,
+          "mean": 0.08187327999999999,
+          "p50": 0.08218700000000001,
+          "p95": 0.10780044999999999,
+          "p99": 0.15451082
+        },
+        "actual_udp_payload_bytes": {
+          "count": 1000,
+          "mean": 309.56,
+          "p50": 310.0,
+          "p95": 310.0,
+          "p99": 310.0
+        },
+        "unknown_outcomes": 0,
+        "missing_latency_measurements": 0,
+        "diagnosis": {
+          "status_counts": {},
+          "kms_signal_true_positive_decisions": 0,
+          "kms_signal_false_positive_decisions": 0,
+          "kms_signal_false_negative_decisions": 0,
+          "scope": "Declared scenario-family signal check; not exact fault localisation or attack attribution"
+        },
+        "resource_usage": {
+          "process_cpu_s": 0.596032000000001,
+          "wall_s": 1.476737542,
+          "process_high_water_rss_bytes": 259719168,
+          "scope": "Whole co-located trial, including sender/receiver/KMS/relay/log export;not isolated agent CPU"
+        },
+        "phase_note": "RTT includes receiver work; key/queue spans can overlap under copies. Do not sum these marginal distributions.",
+        "handling_note": "Instrumented crypto/store spans are a lower bound; excludes some parsing/dispatch/key-cache work. Not a proof of the complete 1 ms agent budget."
+      },
+      {
+        "policy": "bypass",
+        "logging_mode": "deferred",
+        "offered": 1000,
+        "completed": 1000,
+        "missing_completion": 0,
+        "timely_executed": 1000,
+        "timely_fraction": 1.0,
+        "executions": 1000,
+        "duplicate_executions": 0,
+        "switches": 0,
+        "keys_delivered": 1,
+        "key_policy_uses": {
+          "A": 0,
+          "B": 1000
+        },
+        "wire_bytes": 337560,
+        "extra_path_bytes": 0,
+        "statuses": {
+          "executed": 1000
+        },
+        "source_latency_ms": {
+          "count": 1000,
+          "mean": 0.75809406,
+          "p50": 0.7183539999999999,
+          "p95": 0.94283505,
+          "p99": 1.6527063299999998
+        },
+        "source_clock": "Scheduled open-loop arrivals; generator scheduling lag is included in timely outcomes",
+        "end_to_end_ms": {
+          "count": 1000,
+          "mean": 0.641205584,
+          "p50": 0.6049789999999999,
+          "p95": 0.8143663499999999,
+          "p99": 1.526836159999999
+        },
+        "successful_ack_ms": {
+          "count": 1000,
+          "mean": 0.641205584,
+          "p50": 0.6049789999999999,
+          "p95": 0.8143663499999999,
+          "p99": 1.526836159999999
+        },
+        "decision_us": {
+          "count": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null,
+          "p99": null
+        },
+        "queue_and_pacing_ms": {
+          "count": 0,
+          "mean": null,
+          "p50": null,
+          "p95": null,
+          "p99": null
+        },
+        "key_wait_ms": {
+          "count": 1000,
+          "mean": 0.008501715,
+          "p50": 0.006792,
+          "p95": 0.010625,
+          "p99": 0.02337542
+        },
+        "observed_handling_lower_bound_ms": {
+          "count": 1000,
+          "mean": 0.24316872,
+          "p50": 0.230104,
+          "p95": 0.36297789999999996,
+          "p99": 0.4689233299999999
+        },
+        "schedule_lag_ms": {
+          "count": 1000,
+          "mean": 0.087275679,
+          "p50": 0.090146,
+          "p95": 0.11611004999999998,
+          "p99": 0.15414340999999995
+        },
+        "actual_udp_payload_bytes": {
+          "count": 1000,
+          "mean": 309.56,
+          "p50": 310.0,
+          "p95": 310.0,
+          "p99": 310.0
+        },
+        "unknown_outcomes": 0,
+        "missing_latency_measurements": 0,
+        "diagnosis": {
+          "status_counts": {},
+          "kms_signal_true_positive_decisions": 0,
+          "kms_signal_false_positive_decisions": 0,
+          "kms_signal_false_negative_decisions": 0,
+          "scope": "Declared scenario-family signal check; not exact fault localisation or attack attribution"
+        },
+        "resource_usage": {
+          "process_cpu_s": 0.5577209999999972,
+          "wall_s": 1.483782709,
+          "process_high_water_rss_bytes": 271826944,
+          "scope": "Whole co-located trial, including sender/receiver/KMS/relay/log export;not isolated agent CPU"
+        },
+        "phase_note": "RTT includes receiver work; key/queue spans can overlap under copies. Do not sum these marginal distributions.",
+        "handling_note": "Instrumented crypto/store spans are a lower bound; excludes some parsing/dispatch/key-cache work. Not a proof of the complete 1 ms agent budget."
+      },
+      {
+        "policy": "fixed-b",
+        "logging_mode": "sync",
+        "offered": 1000,
+        "completed": 1000,
+        "missing_completion": 0,
+        "timely_executed": 1000,
+        "timely_fraction": 1.0,
+        "executions": 1000,
+        "duplicate_executions": 0,
+        "switches": 0,
+        "keys_delivered": 1,
+        "key_policy_uses": {
+          "A": 0,
+          "B": 1000
+        },
+        "wire_bytes": 337560,
+        "extra_path_bytes": 0,
+        "statuses": {
+          "executed": 1000
+        },
+        "source_latency_ms": {
+          "count": 1000,
+          "mean": 1.594248189,
+          "p50": 0.8958955,
+          "p95": 7.1167243499999975,
+          "p99": 10.222508249999999
+        },
+        "source_clock": "Scheduled open-loop arrivals; generator scheduling lag is included in timely outcomes",
+        "end_to_end_ms": {
+          "count": 1000,
+          "mean": 1.491758763,
+          "p50": 0.8172085,
+          "p95": 7.026659799999999,
+          "p99": 9.95934125
+        },
+        "successful_ack_ms": {
+          "count": 1000,
+          "mean": 1.491758763,
+          "p50": 0.8172085,
+          "p95": 7.026659799999999,
+          "p99": 9.95934125
+        },
+        "decision_us": {
+          "count": 1000,
+          "mean": 39.410505,
+          "p50": 37.6875,
+          "p95": 52.923249999999996,
+          "p99": 65.41933999999999
+        },
+        "queue_and_pacing_ms": {
+          "count": 1000,
+          "mean": 0.685376046,
+          "p50": 0.043896,
+          "p95": 5.993006249999998,
+          "p99": 9.039406249999999
+        },
+        "key_wait_ms": {
+          "count": 1000,
+          "mean": 0.013941979,
+          "p50": 0.011625,
+          "p95": 0.018254149999999997,
+          "p99": 0.03200125
+        },
+        "observed_handling_lower_bound_ms": {
+          "count": 1000,
+          "mean": 0.235375809,
+          "p50": 0.210646,
+          "p95": 0.35420319999999994,
+          "p99": 0.47120633999999983
+        },
+        "schedule_lag_ms": {
+          "count": 1000,
+          "mean": 0.063713319,
+          "p50": 0.0504785,
+          "p95": 0.17442755,
+          "p99": 0.30301359
+        },
+        "actual_udp_payload_bytes": {
+          "count": 1000,
+          "mean": 309.56,
+          "p50": 310.0,
+          "p95": 310.0,
+          "p99": 310.0
+        },
+        "unknown_outcomes": 0,
+        "missing_latency_measurements": 0,
+        "diagnosis": {
+          "status_counts": {
+            "insufficient_evidence": 887,
+            "observed_signals": 339
+          },
+          "kms_signal_true_positive_decisions": 0,
+          "kms_signal_false_positive_decisions": 0,
+          "kms_signal_false_negative_decisions": 0,
+          "scope": "Declared scenario-family signal check; not exact fault localisation or attack attribution"
+        },
+        "resource_usage": {
+          "process_cpu_s": 0.8350989999999996,
+          "wall_s": 1.585389125,
+          "process_high_water_rss_bytes": 318226432,
+          "scope": "Whole co-located trial, including sender/receiver/KMS/relay/log export;not isolated agent CPU"
+        },
+        "phase_note": "RTT includes receiver work; key/queue spans can overlap under copies. Do not sum these marginal distributions.",
+        "handling_note": "Instrumented crypto/store spans are a lower bound; excludes some parsing/dispatch/key-cache work. Not a proof of the complete 1 ms agent budget."
+      },
+      {
+        "policy": "fixed-b",
+        "logging_mode": "deferred",
+        "offered": 1000,
+        "completed": 1000,
+        "missing_completion": 0,
+        "timely_executed": 1000,
+        "timely_fraction": 1.0,
+        "executions": 1000,
+        "duplicate_executions": 0,
+        "switches": 0,
+        "keys_delivered": 1,
+        "key_policy_uses": {
+          "A": 0,
+          "B": 1000
+        },
+        "wire_bytes": 337560,
+        "extra_path_bytes": 0,
+        "statuses": {
+          "executed": 1000
+        },
+        "source_latency_ms": {
+          "count": 1000,
+          "mean": 2.870573763,
+          "p50": 0.8495835,
+          "p95": 16.72941109999999,
+          "p99": 26.629477319999996
+        },
+        "source_clock": "Scheduled open-loop arrivals; generator scheduling lag is included in timely outcomes",
+        "end_to_end_ms": {
+          "count": 1000,
+          "mean": 2.525193131,
+          "p50": 0.765875,
+          "p95": 14.464006899999998,
+          "p99": 20.805881339999996
+        },
+        "successful_ack_ms": {
+          "count": 1000,
+          "mean": 2.525193131,
+          "p50": 0.765875,
+          "p95": 14.464006899999998,
+          "p99": 20.805881339999996
+        },
+        "decision_us": {
+          "count": 1000,
+          "mean": 38.922978,
+          "p50": 37.167,
+          "p95": 52.21634999999999,
+          "p99": 72.41642
+        },
+        "queue_and_pacing_ms": {
+          "count": 1000,
+          "mean": 1.751969903,
+          "p50": 0.039,
+          "p95": 13.55582325,
+          "p99": 19.99516758
+        },
+        "key_wait_ms": {
+          "count": 1000,
+          "mean": 0.009633076,
+          "p50": 0.008417,
+          "p95": 0.011879199999999996,
+          "p99": 0.016255419999999996
+        },
+        "observed_handling_lower_bound_ms": {
+          "count": 1000,
+          "mean": 0.248892384,
+          "p50": 0.20566600000000002,
+          "p95": 0.31840479999999993,
+          "p99": 0.4876380799999994
+        },
+        "schedule_lag_ms": {
+          "count": 1000,
+          "mean": 0.310756395,
+          "p50": 0.060104,
+          "p95": 0.22214999999999996,
+          "p99": 10.889339669999991
+        },
+        "actual_udp_payload_bytes": {
+          "count": 1000,
+          "mean": 309.56,
+          "p50": 310.0,
+          "p95": 310.0,
+          "p99": 310.0
+        },
+        "unknown_outcomes": 0,
+        "missing_latency_measurements": 0,
+        "diagnosis": {
+          "status_counts": {
+            "insufficient_evidence": 822,
+            "observed_signals": 534
+          },
+          "kms_signal_true_positive_decisions": 0,
+          "kms_signal_false_positive_decisions": 0,
+          "kms_signal_false_negative_decisions": 0,
+          "scope": "Declared scenario-family signal check; not exact fault localisation or attack attribution"
+        },
+        "resource_usage": {
+          "process_cpu_s": 0.7938189999999992,
+          "wall_s": 1.612182167,
+          "process_high_water_rss_bytes": 344899584,
+          "scope": "Whole co-located trial, including sender/receiver/KMS/relay/log export;not isolated agent CPU"
+        },
+        "phase_note": "RTT includes receiver work; key/queue spans can overlap under copies. Do not sum these marginal distributions.",
+        "handling_note": "Instrumented crypto/store spans are a lower bound; excludes some parsing/dispatch/key-cache work. Not a proof of the complete 1 ms agent budget."
+      },
+      {
+        "policy": "ewma",
+        "logging_mode": "sync",
+        "offered": 1000,
+        "completed": 1000,
+        "missing_completion": 0,
+        "timely_executed": 1000,
+        "timely_fraction": 1.0,
+        "executions": 1000,
+        "duplicate_executions": 0,
+        "switches": 0,
+        "keys_delivered": 1,
+        "key_policy_uses": {
+          "A": 1000,
+          "B": 0
+        },
+        "wire_bytes": 337560,
+        "extra_path_bytes": 0,
+        "statuses": {
+          "executed": 1000
+        },
+        "source_latency_ms": {
+          "count": 1000,
+          "mean": 2.454519936,
+          "p50": 0.9338115,
+          "p95": 9.682480849999997,
+          "p99": 10.91714684
+        },
+        "source_clock": "Scheduled open-loop arrivals; generator scheduling lag is included in timely outcomes",
+        "end_to_end_ms": {
+          "count": 1000,
+          "mean": 2.321951228,
+          "p50": 0.8508955,
+          "p95": 9.391786849999997,
+          "p99": 10.642333749999999
+        },
+        "successful_ack_ms": {
+          "count": 1000,
+          "mean": 2.321951228,
+          "p50": 0.8508955,
+          "p95": 9.391786849999997,
+          "p99": 10.642333749999999
+        },
+        "decision_us": {
+          "count": 1000,
+          "mean": 43.012423999999996,
+          "p50": 39.833,
+          "p95": 63.2542,
+          "p99": 85.24591999999997
+        },
+        "queue_and_pacing_ms": {
+          "count": 1000,
+          "mean": 1.486982781,
+          "p50": 0.045125,
+          "p95": 8.396999649999998,
+          "p99": 9.637248249999999
+        },
+        "key_wait_ms": {
+          "count": 1000,
+          "mean": 0.014348912,
+          "p50": 0.0117705,
+          "p95": 0.02001249999999999,
+          "p99": 0.03513499999999999
+        },
+        "observed_handling_lower_bound_ms": {
+          "count": 1000,
+          "mean": 0.24058173500000002,
+          "p50": 0.224376,
+          "p95": 0.33729495,
+          "p99": 0.5230696799999998
+        },
+        "schedule_lag_ms": {
+          "count": 1000,
+          "mean": 0.08874211200000001,
+          "p50": 0.052249,
+          "p95": 0.20540284999999991,
+          "p99": 0.50015575
+        },
+        "actual_udp_payload_bytes": {
+          "count": 1000,
+          "mean": 309.56,
+          "p50": 310.0,
+          "p95": 310.0,
+          "p99": 310.0
+        },
+        "unknown_outcomes": 0,
+        "missing_latency_measurements": 0,
+        "diagnosis": {
+          "status_counts": {
+            "insufficient_evidence": 653,
+            "observed_signals": 869
+          },
+          "kms_signal_true_positive_decisions": 0,
+          "kms_signal_false_positive_decisions": 0,
+          "kms_signal_false_negative_decisions": 0,
+          "scope": "Declared scenario-family signal check; not exact fault localisation or attack attribution"
+        },
+        "resource_usage": {
+          "process_cpu_s": 0.8482989999999972,
+          "wall_s": 1.587622792,
+          "process_high_water_rss_bytes": 347881472,
+          "scope": "Whole co-located trial, including sender/receiver/KMS/relay/log export;not isolated agent CPU"
+        },
+        "phase_note": "RTT includes receiver work; key/queue spans can overlap under copies. Do not sum these marginal distributions.",
+        "handling_note": "Instrumented crypto/store spans are a lower bound; excludes some parsing/dispatch/key-cache work. Not a proof of the complete 1 ms agent budget."
+      },
+      {
+        "policy": "ewma",
+        "logging_mode": "deferred",
+        "offered": 1000,
+        "completed": 1000,
+        "missing_completion": 0,
+        "timely_executed": 1000,
+        "timely_fraction": 1.0,
+        "executions": 1000,
+        "duplicate_executions": 0,
+        "switches": 0,
+        "keys_delivered": 1,
+        "key_policy_uses": {
+          "A": 1000,
+          "B": 0
+        },
+        "wire_bytes": 337560,
+        "extra_path_bytes": 0,
+        "statuses": {
+          "executed": 1000
+        },
+        "source_latency_ms": {
+          "count": 1000,
+          "mean": 0.937646787,
+          "p50": 0.8357285,
+          "p95": 1.2924923999999998,
+          "p99": 3.2021875899999985
+        },
+        "source_clock": "Scheduled open-loop arrivals; generator scheduling lag is included in timely outcomes",
+        "end_to_end_ms": {
+          "count": 1000,
+          "mean": 0.8445695459999999,
+          "p50": 0.750667,
+          "p95": 1.17284135,
+          "p99": 3.0245060099999996
+        },
+        "successful_ack_ms": {
+          "count": 1000,
+          "mean": 0.8445695459999999,
+          "p50": 0.750667,
+          "p95": 1.17284135,
+          "p99": 3.0245060099999996
+        },
+        "decision_us": {
+          "count": 1000,
+          "mean": 41.541212,
+          "p50": 39.583,
+          "p95": 57.16905,
+          "p99": 74.71092
+        },
+        "queue_and_pacing_ms": {
+          "count": 1000,
+          "mean": 0.09817158200000001,
+          "p50": 0.038708,
+          "p95": 0.22406664999999995,
+          "p99": 1.9973319899999982
+        },
+        "key_wait_ms": {
+          "count": 1000,
+          "mean": 0.010090121,
+          "p50": 0.008542,
+          "p95": 0.012252099999999998,
+          "p99": 0.018501669999999998
+        },
+        "observed_handling_lower_bound_ms": {
+          "count": 1000,
+          "mean": 0.22374785600000002,
+          "p50": 0.207667,
+          "p95": 0.32508925,
+          "p99": 0.42411758999999993
+        },
+        "schedule_lag_ms": {
+          "count": 1000,
+          "mean": 0.061263539,
+          "p50": 0.058957,
+          "p95": 0.09632334999999997,
+          "p99": 0.20773140999999984
+        },
+        "actual_udp_payload_bytes": {
+          "count": 1000,
+          "mean": 309.56,
+          "p50": 310.0,
+          "p95": 310.0,
+          "p99": 310.0
+        },
+        "unknown_outcomes": 0,
+        "missing_latency_measurements": 0,
+        "diagnosis": {
+          "status_counts": {
+            "insufficient_evidence": 976,
+            "observed_signals": 72
+          },
+          "kms_signal_true_positive_decisions": 0,
+          "kms_signal_false_positive_decisions": 0,
+          "kms_signal_false_negative_decisions": 0,
+          "scope": "Declared scenario-family signal check; not exact fault localisation or attack attribution"
+        },
+        "resource_usage": {
+          "process_cpu_s": 0.7632629999999949,
+          "wall_s": 1.573529,
+          "process_high_water_rss_bytes": 360153088,
+          "scope": "Whole co-located trial, including sender/receiver/KMS/relay/log export;not isolated agent CPU"
+        },
+        "phase_note": "RTT includes receiver work; key/queue spans can overlap under copies. Do not sum these marginal distributions.",
+        "handling_note": "Instrumented crypto/store spans are a lower bound; excludes some parsing/dispatch/key-cache work. Not a proof of the complete 1 ms agent budget."
+      },
+      {
+        "policy": "forecast",
+        "logging_mode": "sync",
+        "offered": 1000,
+        "completed": 1000,
+        "missing_completion": 0,
+        "timely_executed": 1000,
+        "timely_fraction": 1.0,
+        "executions": 1000,
+        "duplicate_executions": 0,
+        "switches": 0,
+        "keys_delivered": 1,
+        "key_policy_uses": {
+          "A": 1000,
+          "B": 0
+        },
+        "wire_bytes": 337560,
+        "extra_path_bytes": 0,
+        "statuses": {
+          "executed": 1000
+        },
+        "source_latency_ms": {
+          "count": 1000,
+          "mean": 3.269722879,
+          "p50": 1.3392490000000001,
+          "p95": 9.7273258,
+          "p99": 10.24267891
+        },
+        "source_clock": "Scheduled open-loop arrivals; generator scheduling lag is included in timely outcomes",
+        "end_to_end_ms": {
+          "count": 1000,
+          "mean": 3.13029389,
+          "p50": 1.1735415,
+          "p95": 9.515089549999999,
+          "p99": 10.054929999999999
+        },
+        "successful_ack_ms": {
+          "count": 1000,
+          "mean": 3.13029389,
+          "p50": 1.1735415,
+          "p95": 9.515089549999999,
+          "p99": 10.054929999999999
+        },
+        "decision_us": {
+          "count": 1000,
+          "mean": 104.624877,
+          "p50": 95.375,
+          "p95": 155.50834999999998,
+          "p99": 195.09850999999995
+        },
+        "queue_and_pacing_ms": {
+          "count": 1000,
+          "mean": 2.2372249010000003,
+          "p50": 0.2333955,
+          "p95": 8.5488223,
+          "p99": 9.09904083
+        },
+        "key_wait_ms": {
+          "count": 1000,
+          "mean": 0.013806048999999999,
+          "p50": 0.011875,
+          "p95": 0.01704615,
+          "p99": 0.02679324
+        },
+        "observed_handling_lower_bound_ms": {
+          "count": 1000,
+          "mean": 0.238686499,
+          "p50": 0.218875,
+          "p95": 0.34787199999999985,
+          "p99": 0.42706991999999994
+        },
+        "schedule_lag_ms": {
+          "count": 1000,
+          "mean": 0.08898162000000001,
+          "p50": 0.051562,
+          "p95": 0.2536514499999999,
+          "p99": 0.34999956999999987
+        },
+        "actual_udp_payload_bytes": {
+          "count": 1000,
+          "mean": 309.56,
+          "p50": 310.0,
+          "p95": 310.0,
+          "p99": 310.0
+        },
+        "unknown_outcomes": 0,
+        "missing_latency_measurements": 0,
+        "diagnosis": {
+          "status_counts": {
+            "insufficient_evidence": 621,
+            "observed_signals": 1137
+          },
+          "kms_signal_true_positive_decisions": 0,
+          "kms_signal_false_positive_decisions": 0,
+          "kms_signal_false_negative_decisions": 0,
+          "scope": "Declared scenario-family signal check; not exact fault localisation or attack attribution"
+        },
+        "resource_usage": {
+          "process_cpu_s": 0.9080739999999992,
+          "wall_s": 1.582078166,
+          "process_high_water_rss_bytes": 363347968,
+          "scope": "Whole co-located trial, including sender/receiver/KMS/relay/log export;not isolated agent CPU"
+        },
+        "phase_note": "RTT includes receiver work; key/queue spans can overlap under copies. Do not sum these marginal distributions.",
+        "handling_note": "Instrumented crypto/store spans are a lower bound; excludes some parsing/dispatch/key-cache work. Not a proof of the complete 1 ms agent budget."
+      },
+      {
+        "policy": "forecast",
+        "logging_mode": "deferred",
+        "offered": 1000,
+        "completed": 1000,
+        "missing_completion": 0,
+        "timely_executed": 1000,
+        "timely_fraction": 1.0,
+        "executions": 1000,
+        "duplicate_executions": 0,
+        "switches": 0,
+        "keys_delivered": 1,
+        "key_policy_uses": {
+          "A": 1000,
+          "B": 0
+        },
+        "wire_bytes": 337560,
+        "extra_path_bytes": 0,
+        "statuses": {
+          "executed": 1000
+        },
+        "source_latency_ms": {
+          "count": 1000,
+          "mean": 3.526078618,
+          "p50": 1.0181445,
+          "p95": 9.816351049999998,
+          "p99": 10.35804074
+        },
+        "source_clock": "Scheduled open-loop arrivals; generator scheduling lag is included in timely outcomes",
+        "end_to_end_ms": {
+          "count": 1000,
+          "mean": 3.404488517,
+          "p50": 0.9308335000000001,
+          "p95": 9.651301799999999,
+          "p99": 10.22372092
+        },
+        "successful_ack_ms": {
+          "count": 1000,
+          "mean": 3.404488517,
+          "p50": 0.9308335000000001,
+          "p95": 9.651301799999999,
+          "p99": 10.22372092
+        },
+        "decision_us": {
+          "count": 1000,
+          "mean": 102.888245,
+          "p50": 93.333,
+          "p95": 150.03749999999997,
+          "p99": 205.42559
+        },
+        "queue_and_pacing_ms": {
+          "count": 1000,
+          "mean": 2.546177964,
+          "p50": 0.046521,
+          "p95": 8.7053917,
+          "p99": 9.284149489999999
+        },
+        "key_wait_ms": {
+          "count": 1000,
+          "mean": 0.009884891,
+          "p50": 0.008667,
+          "p95": 0.012252049999999999,
+          "p99": 0.021296839999999994
+        },
+        "observed_handling_lower_bound_ms": {
+          "count": 1000,
+          "mean": 0.25250643,
+          "p50": 0.217042,
+          "p95": 0.39889969999999986,
+          "p99": 0.5208487399999999
+        },
+        "schedule_lag_ms": {
+          "count": 1000,
+          "mean": 0.081640786,
+          "p50": 0.0543945,
+          "p95": 0.26100939999999995,
+          "p99": 0.40674200999999993
+        },
+        "actual_udp_payload_bytes": {
+          "count": 1000,
+          "mean": 309.56,
+          "p50": 310.0,
+          "p95": 310.0,
+          "p99": 310.0
+        },
+        "unknown_outcomes": 0,
+        "missing_latency_measurements": 0,
+        "diagnosis": {
+          "status_counts": {
+            "insufficient_evidence": 649,
+            "observed_signals": 1053
+          },
+          "kms_signal_true_positive_decisions": 0,
+          "kms_signal_false_positive_decisions": 0,
+          "kms_signal_false_negative_decisions": 0,
+          "scope": "Declared scenario-family signal check; not exact fault localisation or attack attribution"
+        },
+        "resource_usage": {
+          "process_cpu_s": 0.870664000000005,
+          "wall_s": 1.592958792,
+          "process_high_water_rss_bytes": 411877376,
+          "scope": "Whole co-located trial, including sender/receiver/KMS/relay/log export;not isolated agent CPU"
+        },
+        "phase_note": "RTT includes receiver work; key/queue spans can overlap under copies. Do not sum these marginal distributions.",
+        "handling_note": "Instrumented crypto/store spans are a lower bound; excludes some parsing/dispatch/key-cache work. Not a proof of the complete 1 ms agent budget."
+      }
+    ],
+    "decision_budget_us": 100,
+    "agent_budget_ms": 1,
+    "requested_full_workload_budget_status": "not_validated",
+    "logging_note": "Deferred journals retain JSON encoding and memory writes; only disk I/O is deferred. This is not logging disabled.",
+    "scope": "1000/s offered open-loop on co-located scalar protected commands; not the unsupported 1024-byte application workload"
+  },
+  "pressure": {
+    "scope": "Separate declared queue-pressure diagnostic after primary final collection; no model training or policy selection",
+    "plan": {
+      "seed": 900023,
+      "messages": 200,
+      "rate_per_s": 1000,
+      "delay_per_direction_ms": 10,
+      "queue_limit": 4
+    },
+    "report_sha256": "37379656f109a809a96e8ab7339b50aeb98ac8fa54319d0e33f5af3df70f854e",
+    "trials": [
+      {
+        "logging_mode": "sync",
+        "offered": 200,
+        "completed": 200,
+        "missing_completion": 0,
+        "timely_executed": 4,
+        "timely_fraction": 0.02,
+        "executions": 12,
+        "duplicate_executions": 0,
+        "switches": 0,
+        "keys_delivered": 1,
+        "key_policy_uses": {
+          "A": 12,
+          "B": 0
+        },
+        "wire_bytes": 4000,
+        "extra_path_bytes": 0,
+        "statuses": {
+          "executed": 12,
+          "queue_full": 188
+        },
+        "source_latency_ms": {
+          "count": 200,
+          "mean": 8.058708015,
+          "p50": 0.2957285,
+          "p95": 50.91195349999964,
+          "p99": 147.14805109
+        },
+        "source_clock": "Scheduled open-loop arrivals; generator scheduling lag is included in timely outcomes",
+        "end_to_end_ms": {
+          "count": 200,
+          "mean": 6.634941885,
+          "p50": 0.0225,
+          "p95": 50.56446459999966,
+          "p99": 146.25353366
+        },
+        "successful_ack_ms": {
+          "count": 12,
+          "mean": 110.0731425,
+          "p50": 123.69816649999999,
+          "p95": 147.17629565,
+          "p99": 147.47435913
+        },
+        "decision_us": {
+          "count": 12,
+          "mean": 122.10391666666668,
+          "p50": 116.458,
+          "p95": 177.8413,
+          "p99": 187.66826
+        },
+        "queue_and_pacing_ms": {
+          "count": 12,
+          "mean": 83.78189608333334,
+          "p50": 92.829771,
+          "p95": 122.18897324999999,
+          "p99": 122.70162825
+        },
+        "key_wait_ms": {
+          "count": 12,
+          "mean": 0.097781,
+          "p50": 0.022687,
+          "p95": 0.4264246999999994,
+          "p99": 0.8040177400000005
+        },
+        "observed_handling_lower_bound_ms": {
+          "count": 12,
+          "mean": 1.9243920833333332,
+          "p50": 1.0332284999999999,
+          "p95": 6.265533799999995,
+          "p99": 9.174005960000002
+        },
+        "schedule_lag_ms": {
+          "count": 200,
+          "mean": 1.25471134,
+          "p50": 0.21218700000000001,
+          "p95": 9.128775799999984,
+          "p99": 15.130660909999994
+        },
+        "actual_udp_payload_bytes": {
+          "count": 12,
+          "mean": 305.3333333333333,
+          "p50": 306.0,
+          "p95": 310.0,
+          "p99": 310.0
+        },
+        "unknown_outcomes": 0,
+        "missing_latency_measurements": 0,
+        "diagnosis": {
+          "status_counts": {
+            "insufficient_evidence": 2,
+            "observed_signals": 30
+          },
+          "kms_signal_true_positive_decisions": 0,
+          "kms_signal_false_positive_decisions": 0,
+          "kms_signal_false_negative_decisions": 0,
+          "scope": "Declared scenario-family signal check; not exact fault localisation or attack attribution"
+        },
+        "resource_usage": {
+          "process_cpu_s": 0.10247500000000001,
+          "wall_s": 0.88936775,
+          "process_high_water_rss_bytes": 40878080,
+          "scope": "Whole co-located trial, including sender/receiver/KMS/relay/log export;not isolated agent CPU"
+        },
+        "phase_note": "RTT includes receiver work; key/queue spans can overlap under copies. Do not sum these marginal distributions.",
+        "handling_note": "Instrumented crypto/store spans are a lower bound; excludes some parsing/dispatch/key-cache work. Not a proof of the complete 1 ms agent budget."
+      },
+      {
+        "logging_mode": "deferred",
+        "offered": 200,
+        "completed": 200,
+        "missing_completion": 0,
+        "timely_executed": 4,
+        "timely_fraction": 0.02,
+        "executions": 12,
+        "duplicate_executions": 0,
+        "switches": 0,
+        "keys_delivered": 1,
+        "key_policy_uses": {
+          "A": 12,
+          "B": 0
+        },
+        "wire_bytes": 4004,
+        "extra_path_bytes": 0,
+        "statuses": {
+          "executed": 12,
+          "queue_full": 188
+        },
+        "source_latency_ms": {
+          "count": 200,
+          "mean": 6.567764605,
+          "p50": 0.345813,
+          "p95": 53.154721699999584,
+          "p99": 122.89076883
+        },
+        "source_clock": "Scheduled open-loop arrivals; generator scheduling lag is included in timely outcomes",
+        "end_to_end_ms": {
+          "count": 200,
+          "mean": 6.159556200000001,
+          "p50": 0.037208,
+          "p95": 52.61546394999958,
+          "p99": 122.40736483
+        },
+        "successful_ack_ms": {
+          "count": 12,
+          "mean": 102.06038183333334,
+          "p50": 120.1431665,
+          "p95": 122.66470435000001,
+          "p99": 122.86494087000001
+        },
+        "decision_us": {
+          "count": 12,
+          "mean": 237.90275,
+          "p50": 261.375,
+          "p95": 351.81874999999997,
+          "p99": 373.76375
+        },
+        "queue_and_pacing_ms": {
+          "count": 12,
+          "mean": 77.40309375,
+          "p50": 96.759375,
+          "p95": 97.8667564,
+          "p99": 97.91748488
+        },
+        "key_wait_ms": {
+          "count": 12,
+          "mean": 0.15090283333333335,
+          "p50": 0.03175,
+          "p95": 0.704335599999999,
+          "p99": 1.351667120000001
+        },
+        "observed_handling_lower_bound_ms": {
+          "count": 12,
+          "mean": 1.36098575,
+          "p50": 1.3176465,
+          "p95": 2.0107976499999998,
+          "p99": 2.11725873
+        },
+        "schedule_lag_ms": {
+          "count": 200,
+          "mean": 0.3106734,
+          "p50": 0.2231455,
+          "p95": 0.8580255999999996,
+          "p99": 1.721161999999998
+        },
+        "actual_udp_payload_bytes": {
+          "count": 12,
+          "mean": 305.6666666666667,
+          "p50": 306.0,
+          "p95": 310.0,
+          "p99": 310.0
+        },
+        "unknown_outcomes": 0,
+        "missing_latency_measurements": 0,
+        "diagnosis": {
+          "status_counts": {
+            "insufficient_evidence": 2,
+            "observed_signals": 30
+          },
+          "kms_signal_true_positive_decisions": 0,
+          "kms_signal_false_positive_decisions": 0,
+          "kms_signal_false_negative_decisions": 0,
+          "scope": "Declared scenario-family signal check; not exact fault localisation or attack attribution"
+        },
+        "resource_usage": {
+          "process_cpu_s": 0.11216500000000001,
+          "wall_s": 0.864344833,
+          "process_high_water_rss_bytes": 44023808,
+          "scope": "Whole co-located trial, including sender/receiver/KMS/relay/log export;not isolated agent CPU"
+        },
+        "phase_note": "RTT includes receiver work; key/queue spans can overlap under copies. Do not sum these marginal distributions.",
+        "handling_note": "Instrumented crypto/store spans are a lower bound; excludes some parsing/dispatch/key-cache work. Not a proof of the complete 1 ms agent budget."
+      }
+    ]
+  },
+  "limitations": [
+    "Only two replications per scenario family; bootstrap is descriptive.",
+    "Co-located simulator, agents and KMS share CPU and event loop.",
+    "Decision metrics exclude event serialization; processing spans are a lower bound.",
+    "The 1024-byte application workload is unsupported; do not claim its 1 ms budget.",
+    "No long-duration physical QKD/PTP/operator experiment was performed."
+  ]
+}
