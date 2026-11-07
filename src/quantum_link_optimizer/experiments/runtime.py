@@ -174,10 +174,16 @@ async def run_trial(config, output, settings=None, policy_factory=None):
 
                 while True:
                     try:
+                        request_started = time.monotonic_ns()
                         state = await adapter.request("state", timeout_s=0.2)
                         received = time.monotonic_ns()
                         pool_observation = {**state, "received_ns": received}
-                        emit("kms_observed", **state, received_ns=received)
+                        emit(
+                            "kms_observed",
+                            **state,
+                            received_ns=received,
+                            request_elapsed_ns=received - request_started,
+                        )
                     except KmsError as error:
                         emit("kms_observation_missing", reason=str(error))
 

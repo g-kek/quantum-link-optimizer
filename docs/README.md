@@ -3,12 +3,12 @@
 | Раздел | Содержание |
 | --- | --- |
 | [Запуск](guide/quickstart.md) | HTML, собственный CSV, воспроизведение опытов |
-| [Результаты прогноза](research/forecast-benefit.md) | Обучение и сравнение с EWMA |
+| [Результаты прогноза](research/forecast-benefit.md) | MLP, LSTM и сравнение с EWMA |
 | [Независимые испытания](validation/independent-trials.md) | Доставка, overhead, очереди и ограничения |
 | [Приёмка #1–5](validation/acceptance.md) | Сетевые сценарии и диагностика |
 | [Linux-стенд](lab/network.md) | Namespaces, netem, PCAP |
 | [Команды и KMS](lab/commands-and-keys.md) | Защита, ключи, ACK и dedup |
-| [Выбор пути](control/path-selection.md) | EWMA, копии и pacing |
+| [Выбор пути](control/path-selection.md) | EWMA, копии, pacing и инциденты |
 | [Телеметрия](data/telemetry.md) | События, времена и потери |
 | [Датасеты](data/datasets.md) | Сбор, разбиения и freeze |
 | [Методика](research/experiments.md) | RTT-прогноз, replay и метрики |
