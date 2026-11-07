@@ -1,0 +1,9 @@
+{
+  "train_seeds": [11, 23],
+  "validation_seeds": [101],
+  "final_seeds": [1009, 1013],
+  "cases": ["normal", "swap", "common-700", "slow-kms", "key-exhaustion"],
+  "commands": 18,
+  "model_seed": 42,
+  "epochs": 80
+}
