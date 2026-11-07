@@ -92,12 +92,15 @@ class Receiver(asyncio.DatagramProtocol):
                     self.drop_acks -= 1
                     self.emit("ack_omitted", command_id=body["id"], path=self.path)
                 else:
+                    ack_processing_started = time.monotonic_ns()
                     self.transport.sendto(
                         seal(key, "ack", {**result, "attempt": header["attempt"]}),
                         address,
                     )
                     self.emit(
                         "ack_sent",
+                        receiver_ack_processing_ns=time.monotonic_ns()
+                        - ack_processing_started,
                         command_id=body["id"],
                         path=self.path,
                         session=key.session,
