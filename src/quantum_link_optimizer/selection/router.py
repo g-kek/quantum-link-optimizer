@@ -2,9 +2,9 @@ import asyncio
 import time
 
 from quantum_link_optimizer.commands.message import create
+from quantum_link_optimizer.diagnostics.engine import IncidentTracker
 
 from .budget import CopyBudget, Pacer
-from .diagnostics import diagnose
 from .policy import Policy
 from .race import transmit
 from .state import Observations
@@ -31,10 +31,18 @@ class Router:
         self.sent_commands = set()
         self.pacer = Pacer(settings.pacing_per_s)
         self.queue = asyncio.Queue(maxsize=settings.queue_limit)
+        self.incidents = IncidentTracker(emit, settings.max_age_ms)
+        self.admission_rejections = 0
+        self.last_rejection_ns = 0
         self.worker = asyncio.create_task(self.process())
+        self.monitor = asyncio.create_task(self.monitor_diagnostics())
 
     def observe(self, event, **fields):
         self.observations.observe(event, **fields)
+        if event == "leg_completed" and fields.get("status") == "queue_full":
+            self.admission_rejections += 1
+            self.last_rejection_ns = time.monotonic_ns()
+
         if event == "attempt_sent":
             self.sent_commands.add(fields["command_id"])
 
@@ -56,6 +64,8 @@ class Router:
         try:
             self.queue.put_nowait((body, started, future, copy_allowed))
         except asyncio.QueueFull:
+            self.admission_rejections += 1
+            self.last_rejection_ns = time.monotonic_ns()
             result = {"status": "queue_full", "outcome": "not_sent", "path": None}
             self.complete(body, started, future, result)
         return await future
@@ -140,13 +150,7 @@ class Router:
                 snapshot = self.enrich(snapshot, body, now)
 
             path, reason = self.policy.choose(snapshot, now)
-            findings = diagnose(
-                snapshot,
-                self.settings.shared_segment,
-                self.queue.qsize(),
-                self.settings.target_ms,
-                self.settings.max_age_ms,
-            )
+            findings = self.diagnostics_at(now, snapshot)
             decision_elapsed_ns = time.monotonic_ns() - now
             self.emit(
                 "route_decision",
@@ -169,9 +173,35 @@ class Router:
                 result = await transmit(self, body, started, path, copy_allowed)
         return result
 
+    def diagnostics_at(self, now_ns, snapshot=None):
+        if now_ns - self.last_rejection_ns > self.settings.max_age_ms * 1e6:
+            self.admission_rejections = 0
+
+        return self.incidents.update(
+            snapshot
+            if snapshot is not None
+            else self.observations.snapshot(now_ns, self.senders),
+            now_ns,
+            shared_segment=self.settings.shared_segment,
+            local_queue_depth=self.queue.qsize(),
+            target_ms=self.settings.target_ms,
+            failure_threshold=self.settings.failure_threshold,
+            admission_rejections=self.admission_rejections,
+        )
+
+    async def monitor_diagnostics(self):
+        while True:
+            try:
+                self.diagnostics_at(time.monotonic_ns())
+            except Exception as error:
+                self.emit("diagnostic_error", error=type(error).__name__)
+
+            await asyncio.sleep(self.settings.diagnostic_interval_ms / 1000)
+
     async def close(self):
+        self.monitor.cancel()
         self.worker.cancel()
-        await asyncio.gather(self.worker, return_exceptions=True)
+        await asyncio.gather(self.monitor, self.worker, return_exceptions=True)
         while not self.queue.empty():
             _, _, future, _ = self.queue.get_nowait()
             future.cancel()

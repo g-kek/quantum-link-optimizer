@@ -1,0 +1,11 @@
+{
+  "final_seeds": [2027, 2039],
+  "cases": ["normal", "swap", "common-700", "slow-kms", "key-exhaustion", "shared-queue", "receiver-restart", "loss-a"],
+  "commands": 18,
+  "interval_s": 0.075,
+  "model_seed": 42,
+  "epochs": 80,
+  "window": 8,
+  "hidden_size": 16,
+  "prediction_penalty_ms": 100
+}

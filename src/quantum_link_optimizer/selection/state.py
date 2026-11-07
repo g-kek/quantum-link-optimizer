@@ -13,6 +13,8 @@ class Observations:
         self.sequence = 0
         self.setup_costs = {}
         self.acks = {}
+        self.inventory = None
+        self.key_waits = {path: {} for path in ("A", "B")}
 
     def observe(self, event, **fields):
         now = time.monotonic_ns()
@@ -29,9 +31,25 @@ class Observations:
             "record_id": self.sequence,
         }
         self.history.observe(record)
+        if event == "kms_observed":
+            self.inventory = record
+
         path = fields.get("path")
         if path not in self.failures:
             return
+        command = fields.get("command_id")
+
+        if event == "key_wait_started" and command is not None:
+            self.key_waits[path][command] = available
+
+        if event in {
+            "session_ready",
+            "leg_completed",
+            "command_completed",
+            "leg_abandoned",
+        }:
+            self.key_waits[path].pop(command, None)
+
         if event == "ack_received":
             self.acks[path] = record
         if event == "probe_result":
@@ -71,7 +89,24 @@ class Observations:
                     and now_ns - ack["available_ns"] <= self.settings.max_age_ms * 1e6
                     else None
                 )
+            inventory = self.inventory
+            kms_age = (now_ns - inventory["available_ns"]) / 1e6 if inventory else None
+            kms_fresh = kms_age is not None and 0 <= kms_age <= self.settings.max_age_ms
+            pool = (
+                "shared" if inventory and "shared" in inventory["available"] else path
+            )
+            oldest_wait = min(self.key_waits[path].values(), default=now_ns)
+
             result[path] = {
+                "kms_pool": pool,
+                "kms_available_keys": inventory["available"].get(pool)
+                if kms_fresh
+                else None,
+                "kms_observation_age_ms": kms_age,
+                "kms_request_ms": inventory.get("request_elapsed_ns", 0) / 1e6
+                if kms_fresh
+                else None,
+                "active_key_wait_ms": (now_ns - oldest_wait) / 1e6,
                 **receiver,
                 "sender_queue_observation_age_ms": (
                     now_ns - self.history.queues[path]["algorithm_available_ns"]

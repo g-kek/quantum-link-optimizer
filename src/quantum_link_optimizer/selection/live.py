@@ -7,6 +7,7 @@ from quantum_link_optimizer.collection.probes import Echo, Probe
 from quantum_link_optimizer.commands.sender import Sender
 from quantum_link_optimizer.commands.session import Session
 from quantum_link_optimizer.kms.api import Client
+from quantum_link_optimizer.kms.model import KmsError
 from quantum_link_optimizer.telemetry_lab.events import EventLog
 
 from .config import Settings
@@ -95,6 +96,23 @@ async def run_sender(config, events):
                     )
                 )
 
+        async def poll_inventory():
+            while True:
+                started_ns = time.monotonic_ns()
+
+                try:
+                    state = await adapter.request("state", timeout_s=0.2)
+                    emit(
+                        "kms_observed",
+                        **state,
+                        request_elapsed_ns=time.monotonic_ns() - started_ns,
+                    )
+                except KmsError as error:
+                    emit("kms_observation_missing", reason=str(error))
+
+                await asyncio.sleep(0.1)
+
+        tasks.append(asyncio.create_task(poll_inventory()))
         tasks.append(asyncio.create_task(sample()))
         await asyncio.sleep(config.get("warmup_s", 0.2))
         commands = []

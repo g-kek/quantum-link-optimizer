@@ -18,6 +18,7 @@ class Settings:
     queue_limit: int = 64
     pacing_per_s: float = 0
     kms_cooldown_ms: float = 200
+    diagnostic_interval_ms: float = 50
     target_ms: float = 100
 
     def __post_init__(self):
@@ -30,11 +31,12 @@ class Settings:
             "pacing_per_s",
             "kms_cooldown_ms",
             "target_ms",
+            "diagnostic_interval_ms",
         ):
             value = getattr(self, name)
             if type(value) not in (int, float) or not math.isfinite(value) or value < 0:
                 raise ValueError(f"invalid {name}")
-        if not self.max_age_ms or not self.target_ms:
+        if not self.max_age_ms or not self.target_ms or not self.diagnostic_interval_ms:
             raise ValueError("age and target must be positive")
         if self.hedge_delay_ms is not None and (
             type(self.hedge_delay_ms) not in (float, int)
