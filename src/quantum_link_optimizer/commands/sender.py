@@ -31,6 +31,7 @@ class Sender(asyncio.DatagramProtocol):
     def datagram_received(self, packet, address):
         if self.pending is None or address != self.remote:
             return
+        processing_started = time.monotonic_ns()
         key, body, future = self.pending
         try:
             result = unseal(key, inspect(packet, "ack"), "ack")
@@ -40,6 +41,9 @@ class Sender(asyncio.DatagramProtocol):
                 or future.done()
             ):
                 return
+            result["sender_ack_processing_ns"] = (
+                time.monotonic_ns() - processing_started
+            )
             future.set_result(result)
         except (ValueError, KeyError, TypeError, InvalidTag):
             self.emit("ack_rejected", path=self.session.path)
@@ -174,6 +178,7 @@ class Sender(asyncio.DatagramProtocol):
         while (remaining := (body["deadline_ns"] - time.monotonic_ns()) / 1e9) > 0:
             can_send = max_attempts is None or attempt < max_attempts
             if can_send:
+                processing_started = time.monotonic_ns()
                 packet = seal(key, "command", body, attempt=attempt + 1)
                 can_send = reserve is None or reserve(len(packet) + 28)
             if can_send:
@@ -189,6 +194,7 @@ class Sender(asyncio.DatagramProtocol):
                     key_id=key.key_id,
                     sent_ns=sent,
                     wire_bytes=len(packet) + 28,
+                    sender_send_processing_ns=sent - processing_started,
                 )
             elif attempt == 0:
                 return {
@@ -205,6 +211,7 @@ class Sender(asyncio.DatagramProtocol):
                     receiver_queue_wait_ns=result.get("receiver_queue_wait_ns"),
                     receiver_key_wait_ns=result.get("receiver_key_wait_ns"),
                     receiver_processing_ns=result.get("receiver_processing_ns"),
+                    sender_ack_processing_ns=result.get("sender_ack_processing_ns"),
                     command_id=body["id"],
                     session=self.session.id,
                     path=self.session.path,

@@ -2,6 +2,8 @@
 
 import asyncio
 import json
+import resource
+import sys
 import time
 import uuid
 from contextlib import ExitStack
@@ -20,7 +22,9 @@ from quantum_link_optimizer.telemetry_lab.events import EventLog
 from quantum_link_optimizer.telemetry_lab.manifest import begin, finish
 
 from .common import write_json
+from .faults import restart_receivers
 from .forecasting.features import exhaustion_seconds
+from .journals import DeferredJournal
 
 
 async def run_trial(config, output, settings=None, policy_factory=None):
@@ -40,12 +44,19 @@ async def run_trial(config, output, settings=None, policy_factory=None):
     failure = None
     decision_rows = []
     started_ns = time.monotonic_ns()
+    cpu_started = time.process_time()
+    bypass = config.get("bypass", False)
 
     with ExitStack() as stack:
         logs = {}
 
         for source in ("sender", "receiver", "kms", "samples", "truth"):
-            logs[source] = EventLog(output / f"{source}.jsonl", source=source)
+            journal_type = (
+                DeferredJournal
+                if config.get("logging_mode") == "deferred"
+                else EventLog
+            )
+            logs[source] = journal_type(output / f"{source}.jsonl", source=source)
             stack.callback(logs[source].close)
 
         def emit(event, **fields):
@@ -139,21 +150,24 @@ async def run_trial(config, output, settings=None, policy_factory=None):
                     path_config,
                     adapter,
                     store,
-                    leg_emit,
+                    emit if bypass else leg_emit,
                     logs["receiver"].emit,
                     resources,
                     device=shared_device,
                     logical_session=logical_session,
                 )
 
-            router = Router(
-                {path: item[0] for path, item in paths.items()},
-                settings,
-                emit,
-                allow_copy=settings.hedge_delay_ms is not None,
-                policy=policy_factory(settings) if policy_factory else None,
-                enrich=enrich,
-            )
+            if not bypass:
+                router = Router(
+                    {path: item[0] for path, item in paths.items()},
+                    settings,
+                    emit,
+                    allow_copy=settings.hedge_delay_ms is not None,
+                    policy=policy_factory(settings) if policy_factory else None,
+                    enrich=enrich,
+                )
+
+            controller = router if router is not None else paths["B"][0]
 
             async def poll_inventory():
                 nonlocal pool_observation
@@ -175,6 +189,14 @@ async def run_trial(config, output, settings=None, policy_factory=None):
                 while True:
                     for path, (sender, probe, _) in paths.items():
                         probe.send(sample_id)
+                        if shared_device is not None:
+                            emit(
+                                "component_observation",
+                                path=path,
+                                generated_ns=time.monotonic_ns(),
+                                device=shared_device.snapshot(time.monotonic()),
+                            )
+
                         emit(
                             "sender_queue_sample",
                             path=path,
@@ -212,6 +234,20 @@ async def run_trial(config, output, settings=None, policy_factory=None):
 
                     logs["truth"].emit("fault", cause="path_swap", sequence=sequence)
 
+                if (
+                    config["case"] == "receiver-restart"
+                    and sequence == config["count"] // 2
+                ):
+                    store, proof = await restart_receivers(
+                        resources,
+                        store,
+                        output,
+                        adapter,
+                        logs["receiver"].emit,
+                        config["queue_limit"],
+                    )
+                    logs["truth"].emit("receiver_restart", sequence=sequence, **proof)
+
                 emit(
                     "workload_arrival",
                     command_id=f"command-{sequence}",
@@ -219,7 +255,7 @@ async def run_trial(config, output, settings=None, policy_factory=None):
                 )
                 commands.append(
                     asyncio.create_task(
-                        router.send(
+                        controller.send(
                             sequence,
                             sequence,
                             config["deadline_s"],
@@ -268,6 +304,22 @@ async def run_trial(config, output, settings=None, policy_factory=None):
     from quantum_link_optimizer.selection.report import report
 
     summary = report(output, settings.target_ms)
+    write_json(
+        output / "resource-usage.json",
+        {
+            "process_cpu_s": time.process_time() - cpu_started,
+            "wall_s": (time.monotonic_ns() - started_ns) / 1e9,
+            "process_high_water_rss_bytes": resource.getrusage(
+                resource.RUSAGE_SELF
+            ).ru_maxrss
+            * (1 if sys.platform == "darwin" else 1024),
+            "scope": (
+                "Whole co-located trial, including sender/receiver/KMS/relay/log "
+                "export;"
+                "not isolated agent CPU"
+            ),
+        },
+    )
     finish(output, manifest)
 
     if failure is not None:
