@@ -10,46 +10,6 @@ from quantum_link_optimizer.experiments.validation.freeze import read_lock
 from quantum_link_optimizer.telemetry_lab.manifest import digest, verify_files
 from quantum_link_optimizer.telemetry_lab.report import records
 
-OPERATOR_REQUESTS = [
-    (
-        "Границы услуги: VPN, транспорт ключей или выдача ключей; ответственные "
-        "за шлюзы, KMS и последний участок."
-    ),
-    (
-        "Схема A/B, точки перехода, обратные маршруты, общие "
-        "волокна/устройства/питание и доступные действия."
-    ),
-    (
-        "Сырые одновременные измерения обоих путей: UTC, точки и метод, "
-        "размер/класс пакета, частота, timeout и все неудачные пробы."
-    ),
-    (
-        "Определение исходных 700 мс и цели 100 мс: RTT или ACK, перцентиль/доля, "
-        "нагрузка и период."
-    ),
-    (
-        "Счётчики очередей/нагрузки/errors/drops с единицами, частотой, сбросами "
-        "и версиями оборудования."
-    ),
-    (
-        "KMS: протокол/API, согласованная выдача, задержки, "
-        "запас/пополнение/расход и ротация без передачи ключевого материала в "
-        "журналы."
-    ),
-    (
-        "QKD/PTP только при реальном наличии: источник, привязка к устройствам, "
-        "QBER/SKR/offset, погрешности и alarms."
-    ),
-    (
-        "Ограничения MTU, повторов, порядка и идемпотентности команд; стоимость и "
-        "простой переключения."
-    ),
-    (
-        "Разрешённые измерения и изменения, read-only/shadow-пилот, SLO/условия "
-        "остановки, владелец отката и правила хранения данных."
-    ),
-]
-
 
 def verified(path):
     manifest = json.loads((path / "manifest.json").read_text())
@@ -244,9 +204,8 @@ def report_data(development, validation):
         "paired": final["paired_forecast_vs_ewma"],
         "trials": traces,
         "performance": final["performance"],
-        "operator_requests": OPERATOR_REQUESTS,
         "sources": {
-            "origin": "Uncalibrated co-located laboratory UDP/TCP; no operator data",
+            "origin": "Лабораторный UDP/TCP-обмен на одном хосте",
             "development_manifest_sha256": digest(development / "manifest.json"),
             "validation_manifest_sha256": digest(validation / "manifest.json"),
             "model_sha256": final["model_sha256"],
@@ -262,7 +221,6 @@ def report_data(development, validation):
                 name: development_manifest.get(name)
                 for name in ("platform", "python", "commit", "dirty")
             },
-            "limitations": final["limitations"],
         },
     }
 

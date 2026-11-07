@@ -72,12 +72,11 @@ def summarize(output):
     (output / "summary.json").write_text(json.dumps(result, indent=2) + "\n")
     (output / "summary.md").write_text(
         "# Опыт\n\n"
-        f"Команд: {result['submitted']}; завершений: {result['completed']}; "
-        f"исполнено на receiver: {result['receiver_executions']}.\n\n"
-        f"ACK executed до дедлайна: {result['timely_executed']}.\n\n"
-        "Статусы: `" + json.dumps(result["statuses"], ensure_ascii=False) + "`.\n\n"
-        "Наблюдения: sender.jsonl, receiver.jsonl, kms.jsonl, samples.jsonl.\n"
-        "Истинные воздействия: truth*.jsonl / kms.truth.jsonl (только для проверки).\n"
-        "Пропущенные завершения: " + str(len(result["missing_completion"])) + ".\n"
+        f"- Поступило: {result['submitted']}\n"
+        f"- Завершено: {result['completed']}\n"
+        f"- Исполнено на receiver: {result['receiver_executions']}\n"
+        f"- ACK до дедлайна: {result['timely_executed']}\n"
+        f"- Без завершения: {len(result['missing_completion'])}\n\n"
+        "Статусы: `" + json.dumps(result["statuses"], ensure_ascii=False) + "`\n"
     )
     return result

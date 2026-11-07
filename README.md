@@ -1,132 +1,81 @@
 # Quantum Link Optimizer
 
-**Исследовательский MVP · Python 3.12–3.13 · PyTorch / CPU · Apache 2.0**
+Выбор пути A/B для защищённых команд с учётом RTT, очереди и доступности ключей
+Python 3.12–3.13 · PyTorch CPU · UDP/TCP · Apache 2.0
 
-Анализ ping RTT двух путей, сравнение алгоритмов выбора канала и интерактивное
-воспроизведение решений. От измерений — к проверяемому ответу: помогает ли
-переключение между существующими путями приблизиться к целевым 100 мс?
+## Результаты
 
-Контекст проекта — **Москва — Краснодар, МКС РЖД**. По данным постановщика,
-длительные ping-измерения дают около 700 мс RTT. Исходные пробы целевых путей
-пока не предоставлены. MVP готов для демонстрации на маркированной синтетике
-и анализа внешнего CSV; снижение реальных 700 → 100 мс пока не подтверждено.
+96 лабораторных эпизодов, 2112 команд, восемь сценариев
+Модель зафиксирована до независимых испытаний
 
-[Документация](docs/README.md) · [Запуск и CSV](docs/guide/quickstart.md) ·
-[План развития](docs/planning/roadmap.md) · [Восемь задач](docs/planning/backlog.md) ·
-[Приёмка MVP](docs/validation/acceptance.md)
+| Режим | ACK ≤100 мс | Доля | Байты копий |
+| --- | ---: | ---: | ---: |
+| Постоянный A | 102 / 352 | 29,0% | 0 |
+| Постоянный B | 23 / 352 | 6,5% | 0 |
+| EWMA | 127 / 352 | 36,1% | 0 |
+| Прогноз | 128 / 352 | 36,4% | 0 |
+| EWMA + копии | 137 / 352 | 38,9% | 65 390 |
+| EWMA + pacing | 9 / 352 | 2,6% | 0 |
 
-![Интерактивный отчёт о задержке двух путей](docs/assets/demo.png)
+- EWMA дал на 25 своевременных команд больше, чем лучший фиксированный путь
+- Прогноз добавил одну команду к EWMA, убедительного преимущества нет
+- Копии добавили 10 своевременных команд к EWMA за дополнительный трафик
+- В 12 рестартах сохранилось состояние получателя, повторных исполнений в серии нет
 
-## Быстрый запуск
+В измерении при 1000 командах/с p99 решения EWMA составил 75–85 мкс,
+прогноза — 195–205 мкс при цели 100 мкс
+Полный бюджет обработки 1 мс для 1024 прикладных байт не подтверждён
 
-Нужны Python 3.12 или 3.13 и [uv](https://docs.astral.sh/uv/). GPU, Node.js
-и отдельный веб-сервер для работы MVP не требуются.
+Это реальные сокеты с лабораторными задержками, а не измерения сети оператора
+Результат показывает долю ACK в срок, а не снижение задержки на заданное число мс
+Если оба пути дают 700 мс, выбор между ними не создаёт путь быстрее 100 мс
+
+## Запуск отчёта
 
 ```bash
-git clone https://github.com/g-kek/quantum-link-optimizer.git
-cd quantum-link-optimizer
-uv sync --locked --python 3.12
+uv sync --locked --python 3.12 --extra lab
+uv run python -m quantum_link_optimizer.experiments.forecasting.run \
+  --plan lab/experiments/forecast-benefit.json \
+  --output artifacts/experiments/forecast-benefit-01
+uv run python -m quantum_link_optimizer.experiments.validation.run \
+  --development artifacts/experiments/forecast-benefit-01 \
+  --plan lab/experiments/independent-trials.json \
+  --output artifacts/experiments/independent-trials-01
+uv run python -m quantum_link_optimizer.experiments.demo.build \
+  --development artifacts/experiments/forecast-benefit-01 \
+  --validation artifacts/experiments/independent-trials-01 \
+  --output artifacts/experiments/operator-demo
+```
+
+Для каждого сбора нужен новый каталог
+Откройте `artifacts/experiments/operator-demo/index.html` в браузере
+Готовый HTML работает без сервера и подключения к сети
+
+В отчёте — RTT, исходы команд, очередь, ключи, решения и сравнение политик
+Данные и веса сохраняются в `artifacts/`, в Git входят численные сводки
+
+## Другие режимы
+
+```bash
 uv run quantum-link demo --output artifacts/demo
+uv run quantum-link audit --input data/ping.csv --output artifacts/ping-audit
 ```
 
-Откройте `artifacts/demo/index.html` в браузере. Актуальный код опубликован в `main`.
+`demo` создаёт синтетический RTT-ряд, `audit` анализирует собственный CSV
+Формат CSV и команды стенда — в [инструкции](docs/guide/quickstart.md)
 
-По умолчанию демонстрация генерирует 4000 измерений со значениями около
-700 мс, обучает небольшую модель на CPU и проверяет решения на последних 20%
-ряда. Сценарий `high-rtt` добавляет 625 мс к базовому генератору — это
-иллюстрация ограничения метода, а не модель физики или измерения МКС РЖД.
+## Документация и код
 
-Для сценария с задержками вблизи порога:
+- [Навигация](docs/README.md)
+- [Польза прогноза](docs/research/forecast-benefit.md)
+- [Независимые испытания](docs/validation/independent-trials.md)
+- [План развития](docs/planning/roadmap.md)
+- [Задачи](docs/planning/backlog.md)
 
-```bash
-uv run quantum-link demo --scenario normal --output artifacts/demo-normal
-```
-
-## Что можно показать
-
-- График RTT обоих путей, порог и пошаговое воспроизведение выбора.
-- Сравнение fixed-path, previous RTT, EWMA, прогноза ML и выбора с учётом риска.
-- Одинаковые ограничения удержания и переключений для сопоставимых политик.
-- Mean, p95/p99, долю превышений, покрытие измерений, отказы и переключения.
-- Предел выбора: долю доступных пар, где **оба пути** выше порога.
-- Происхождение данных, параметры запуска и экспорт JSON.
-
-Отчёт работает локально без CDN и сетевых запросов. Кнопка «Открыть отчёт JSON»
-загружает другой результат `demo` или `audit` без повторного обучения.
-
-## Анализ собственных ping-измерений
-
-```bash
-uv run quantum-link audit \
-  --input data/ping.csv \
-  --output artifacts/ping-audit
-```
-
-CSV в длинном формате, UTF-8, с точным порядком колонок:
-
-```text
-sample,timestamp,path,status,rtt_ms,source,provenance
-```
-
-Одна строка на путь и момент измерения. `path` — 0/1; `status` —
-`ok`/`timeout`/`missing`; RTT — в мс только при `ok`. Timestamp содержит
-часовой пояс; два пути одного sample имеют общее время. `source` —
-`real_telemetry` либо `ripe_atlas`, `provenance` описывает источник и метод.
-Сырые времена проб следует сохранять при подготовке парного набора.
-
-`audit` не обучает модель и не переносит на измерения модель из синтетики.
-Он сравнивает простые причинные политики и показывает достижимость на
-доступных парах. Тайм-ауты и пропуски сохраняются; неизвестный RTT не считается
-успешной доставкой. По умолчанию история старше 2 секунд считается устаревшей:
-при другой частоте проб задайте `--max-gap-seconds`.
-
-Подробная [схема входа и трактовка метрик](docs/guide/quickstart.md#внешняя-телеметрия).
-
-## Артефакты
-
-| Файл / каталог | Содержимое |
-| --- | --- |
-| `index.html` | Переносимый интерактивный отчёт |
-| `report.json` | Метрики, временной ряд, решения и сведения о запуске |
-| `experiment/` | Только demo: телеметрия, веса, прогнозы, протоколы оценки |
-| `experiment/replay/shadow.jsonl` | Только demo: решения перед раскрытием исходов |
-
-Повторный запуск в тот же каталог перезаписывает результаты.
-Веса и исходные данные исключены из Git.
-
-## Методика и ограничения
-
-Для обучения используются временные train/validation/test 60/20/20,
-нормализация только по train и удаление целевых окон, пересекающих границы.
-Replay использует сохранённые веса; решения сверяются с пакетной оценкой.
-Oracle имеет доступ к фактическим исходам и служит только ориентиром.
-
-На текущей синтетике преимущество ML для выбора пути не установлено.
-В базовом RTT-эксперименте seed 42 выбор по последнему RTT даёт среднее
-75.333 мс, MLP — 75.367 мс; у обоих доля RTT >100 мс равна 2.625%.
-Сравнение с EWMA и политиками с одинаковым удержанием доступно в новом отчёте.
-
-Если оба пути медленнее 100 мс, один выбор между ними не создаст быстрый путь.
-Стоимость переключения в расчёте условная; реальные простои и изменение
-нагрузки ещё не измерены. Программа не управляет оборудованием.
-Ping RTT не оценивает QBER, скорость получения ключей или точность boundary
-clocks. QKD и PTP остаются контекстом исследования, а не физической моделью.
-
-## Дополнительные команды
-
-```bash
-uv run quantum-link experiment --output artifacts/forecast
-uv run quantum-link warning-experiment --output artifacts/warning
-uv run quantum-link risk-experiment --output artifacts/risk
-uv run quantum-link benchmark-suite --output artifacts/benchmark
-uv run quantum-link --help
-```
-
-Методика прогнозирования и replay: [эксперименты](docs/research/experiments.md).
-Онлайн-передача: [команды и ключи](docs/lab/commands-and-keys.md),
-[выбор пути](docs/control/path-selection.md), [данные](docs/data/datasets.md).
-
-## Разработка
+Код — `src/quantum_link_optimizer/`, тесты — `tests/`, конфиги — `lab/`
+Новые результаты подготовлены в PR [#11](https://github.com/g-kek/quantum-link-optimizer/pull/11),
+[#12](https://github.com/g-kek/quantum-link-optimizer/pull/12),
+[#13](https://github.com/g-kek/quantum-link-optimizer/pull/13)
 
 ```bash
 uv run pytest -q
@@ -135,15 +84,4 @@ uv run ruff format --check .
 uv build --wheel
 ```
 
-Код находится в `src/quantum_link_optimizer/`, тесты — в `tests/`.
-HTML-шаблон поставляется внутри Python-пакета. CI проверяет Python 3.12/3.13.
-Основная ветка — `main`; рабочая — `network-control-platform`. История ранних
-экспериментов включена в `main`, отдельные экспериментальные ветки удалены.
-
-Следующий этап — парная телеметрия целевых путей, подтверждение интерфейса
-переключения и shadow-пилот на независимом периоде.
-[Инструкция для разработчика](CONTRIBUTING.md) · [Изменения](CHANGELOG.md).
-
-## Лицензия
-
-[Apache 2.0](LICENSE).
+[Изменения](CHANGELOG.md) · [Лицензия Apache 2.0](LICENSE)

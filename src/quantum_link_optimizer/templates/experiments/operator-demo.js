@@ -119,13 +119,13 @@ function drawTrial() {
       points: `${px},${py - 4} ${px + 4},${py} ${px},${py + 4} ${px - 4},${py}`,
       fill: event.within_target ? "#087f65" : "#bd4037",
     });
-    point.append(svgNode("title", {}, `${event.id}: ${event.status}; ${number(event.latency_ms)} мс; путь ${event.path || "не назначен"}`));
+    point.append(svgNode("title", {}, `${event.id}: ${event.status} · ${number(event.latency_ms)} мс · путь ${event.path || "не назначен"}`));
     chart.append(point);
   }
 
   chart.append(svgNode("line", { x1: x(cutoff), x2: x(cutoff), y1: 30, y2: 285, stroke: "#183747", "stroke-dasharray": "3 3" }));
   byId("time-label").textContent = `${number(cutoff, 2)} с`;
-  byId("scenario-description").textContent = `${labels[trial.case] || trial.case}. Seed ${trial.seed}. Дедлайн оценки — 100 мс; timeout сохраняет и поздние исходы.`;
+  byId("scenario-description").textContent = `${labels[trial.case] || trial.case} · seed ${trial.seed} · порог ACK 100 мс`;
   byId("trial-stats").replaceChildren();
 
   for (const text of [
@@ -144,7 +144,7 @@ function drawTrial() {
   const keyWait = trial.events.filter((event) => event.kind === "key_wait" && event.t <= cutoff).at(-1);
   const completed = trial.events.filter((event) => event.kind === "command" && event.t <= cutoff).at(-1);
   const inventory = trial.events.filter((event) => event.kind === "keys" && event.t <= cutoff).at(-1);
-  byId("decision").textContent = last ? JSON.stringify(last, null, 2) : "До этого момента решение ещё не записано.";
+  byId("decision").textContent = last ? JSON.stringify(last, null, 2) : "Решение ещё не записано";
   byId("state").textContent = JSON.stringify({
     observed_inventory: inventory || null,
     local_queue_at_last_decision: last?.local_queue_depth ?? null,
@@ -169,7 +169,7 @@ function tableRow(body, values) {
 
 byId("verdict").textContent = report.recommend_forecast ? "Требуется проверка внедрения" : "Оставить простые правила";
 byId("episodes").textContent = String(report.trials.length);
-byId("effect").textContent = `Прогноз − EWMA: ${number(report.paired.mean_difference * 100)} п.п.; описательный интервал [${report.paired.interval_95.map((value) => number(value * 100)).join("; ")}].`;
+byId("effect").textContent = `Прогноз − EWMA: ${number(report.paired.mean_difference * 100)} пп · интервал [${report.paired.interval_95.map((value) => number(value * 100)).join(" — ")}]`;
 const totals = new Map();
 
 for (const trial of report.trials) {
@@ -187,12 +187,6 @@ for (const [policy, total] of totals) {
 
 for (const row of report.performance.trials) {
   tableRow(byId("performance"), [row.policy, row.logging_mode, `${row.timely_executed} / ${row.offered}`, number(row.decision_us.p99), number(row.observed_handling_lower_bound_ms.p99), number(row.resource_usage.process_cpu_s)]);
-}
-
-for (const request of report.operator_requests) {
-  const item = document.createElement("li");
-  item.textContent = request;
-  byId("operator").append(item);
 }
 
 byId("sources").textContent = JSON.stringify(report.sources, null, 2);
