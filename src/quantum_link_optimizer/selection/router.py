@@ -11,7 +11,9 @@ from .state import Observations
 
 
 class Router:
-    def __init__(self, senders, settings, emit, allow_copy=False):
+    def __init__(
+        self, senders, settings, emit, allow_copy=False, *, policy=None, enrich=None
+    ):
         if type(allow_copy) is not bool:
             raise ValueError("copy authorization must be boolean")
         if senders["A"].session.logical_id != senders["B"].session.logical_id:
@@ -20,7 +22,8 @@ class Router:
         self.settings = settings
         self.emit = emit
         self.allow_copy = allow_copy
-        self.policy = Policy(settings)
+        self.policy = policy if policy is not None else Policy(settings)
+        self.enrich = enrich
         self.observations = Observations(settings)
         self.budget = CopyBudget(
             settings.extra_bytes_per_command, settings.extra_bytes_total
@@ -132,20 +135,28 @@ class Router:
         else:
             now = time.monotonic_ns()
             snapshot = self.observations.snapshot(now, self.senders)
+
+            if self.enrich is not None:
+                snapshot = self.enrich(snapshot, body, now)
+
             path, reason = self.policy.choose(snapshot, now)
+            findings = diagnose(
+                snapshot,
+                self.settings.shared_segment,
+                self.queue.qsize(),
+                self.settings.target_ms,
+                self.settings.max_age_ms,
+            )
+            decision_elapsed_ns = time.monotonic_ns() - now
             self.emit(
                 "route_decision",
                 command_id=body["id"],
                 path=path,
                 reason=reason,
                 observations=snapshot,
-                diagnostics=diagnose(
-                    snapshot,
-                    self.settings.shared_segment,
-                    self.queue.qsize(),
-                    self.settings.target_ms,
-                    self.settings.max_age_ms,
-                ),
+                diagnostics=findings,
+                decision_elapsed_ns=decision_elapsed_ns,
+                queue_wait_ns=now - started,
                 local_queue_depth=self.queue.qsize(),
             )
             if path is None:

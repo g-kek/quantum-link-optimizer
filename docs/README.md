@@ -8,6 +8,7 @@
 | Начало работы | [Запуск и входные данные](guide/quickstart.md) | Демо, CSV-аудит, метрики отчёта |
 | Исследование | [Контекст и источники](research/context-and-sources.md) | МКС, границы доступа, реальные и синтетические данные |
 | Исследование | [Методика экспериментов](research/experiments.md) | Прогноз, warning/risk, replay, причинность и ограничения |
+| Исследование | [Польза прогноза](research/forecast-benefit.md) | Train-only модель, живые абляции и результат #6 |
 | Стенд | [Сеть Linux](lab/network.md) | Namespace/veth, netem, очереди, capture и очистка |
 | Стенд | [Команды и ключи](lab/commands-and-keys.md) | Sender/receiver, ACK, dedup, KMS, ротация |
 | Данные | [Телеметрия](data/telemetry.md) | События, времена, manifest, quality и план расширения |
