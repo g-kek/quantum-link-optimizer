@@ -7,11 +7,18 @@ ID сохранены после объединения 20 заготовок в
 ## Сначала завершить MVP
 
 #1–5 закрыты после [приёмки](../validation/acceptance.md) и PR #9; #8 закрыт ранее.
-[#6 — польза прогноза](https://github.com/g-kek/quantum-link-optimizer/issues/6)
-требует сверки отмеченных пунктов с моделями/наборами/абляциями и выводом о пользе.
-[#7 — независимые испытания](https://github.com/g-kek/quantum-link-optimizer/issues/7)
-остаётся приёмкой: новые нагрузки/отказы, полный знаменатель, overhead и ошибки
-диагностики. Выполненные #1–5 не повторяем ради нового плана.
+[#6 — польза прогноза](https://github.com/g-kek/quantum-link-optimizer/issues/6):
+завершены causal development и живые абляции; [результат](../research/forecast-benefit.md)
+не обосновывает включение ML. Ветка `research/forecast-benefit`, PR #11.
+[#7 — независимые испытания](https://github.com/g-kek/quantum-link-optimizer/issues/7):
+96 final-эпизодов, overhead и отдельная очередь проверены;
+[результаты](../validation/independent-trials.md) сохраняют отрицательные исходы.
+Ветка `validation/independent-trials`, PR #12. Полный бюджет агента на 1024
+прикладных байтах не подтверждён; это явный остаток, не выполненный performance target.
+#8: обновлён [показ лабораторного обмена](../guide/quickstart.md), ветка
+`demo/operator-readiness`. Ветки последовательные: #7 основана на #6, #8 — на #7;
+они подготовлены к review, слияние в main отдельное действие.
+Выполненные #1–5 не повторяем ради нового плана.
 
 ## ECO-01. Требования, архитектура и аудит готовности
 

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Лабораторная передача — исследовательский отчёт</title>
+<style>__STYLE__</style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">QUANTUM LINK OPTIMIZER · ЛАБОРАТОРНЫЙ MVP</p>
+    <h1>От команды до подтверждения</h1>
+    <p class="lead">Сеть, очередь и ожидание ключа на одной временной шкале. Все числа получены в лаборатории; измерений МКС РЖД здесь нет.</p>
+    <div class="tags"><span>Реальные UDP / TCP-сокеты</span><span>Независимые final-эпизоды</span><span>Без внешних запросов</span></div>
+  </header>
+
+  <section class="cards" aria-label="Результаты исследования">
+    <article><p>Польза прогноза</p><strong id="verdict"></strong><small id="effect"></small></article>
+    <article><p>Независимые эпизоды</p><strong id="episodes"></strong><small>Политики имеют одинаковую входную нагрузку</small></article>
+    <article class="warning"><p>Бюджет 1000/с × 1024 байта</p><strong>Не подтверждён</strong><small>Скалярная команда set не равна 1024 байтам прикладной нагрузки</small></article>
+  </section>
+
+  <section class="panel">
+    <div class="section-title"><div><p class="eyebrow">01 · РАЗБОР ОПЫТА</p><h2>Что происходило с командой</h2></div><button id="export">Скачать данные JSON</button></div>
+    <div class="filters">
+      <label>Сценарий<select id="case"></select></label>
+      <label>Seed<select id="seed"></select></label>
+      <label>Политика<select id="policy"></select></label>
+    </div>
+    <p id="scenario-description" class="muted"></p>
+    <div class="trial-stats" id="trial-stats"></div>
+    <div class="legend"><span class="a">● A: RTT проб</span><span class="b">● B: RTT проб</span><span class="ok">◆ Команда с ACK в срок</span><span class="bad">◆ Просрочка / отказ / неизвестный исход</span></div>
+    <svg id="chart" viewBox="0 0 1000 330" role="img" aria-label="RTT проб и полная задержка команд"></svg>
+    <div class="playback"><button id="play">Воспроизвести</button><label class="slider">Время<input id="time" type="range" min="0" max="1000" value="1000"></label><output id="time-label"></output></div>
+    <p class="muted">Порог 100 мс показан пунктиром. Исходы раскрываются после их появления в журнале. Счётчики сверху относятся ко всему выбранному эпизоду.</p>
+    <div class="detail-grid">
+      <article><h3>Последнее решение</h3><pre id="decision"></pre></article>
+      <article><h3>Наблюдавшиеся ключи и очередь</h3><pre id="state"></pre></article>
+    </div>
+    <details><summary>Внесённые воздействия — только для проверки</summary><p class="muted">Эти события не были входом контроллера и не являются доступным ему диагнозом.</p><pre id="truth"></pre></details>
+  </section>
+
+  <section class="panel">
+    <p class="eyebrow">02 · СОПОСТАВИМЫЕ ПОЛИТИКИ</p><h2>Своевременность с полным знаменателем</h2>
+    <p class="muted">Отказы допуска, ожидание очереди, pacing и неизвестные исходы включены в поступившие команды. Дополнительные байты относятся к попыткам копии: UDP payload + IPv4/UDP; ACK и пробы сюда не входят.</p>
+    <div class="table-wrap"><table><thead><tr><th>Политика</th><th>ACK ≤100 мс / поступило</th><th>Неизвестные исходы</th><th>Байты копий</th></tr></thead><tbody id="comparison"></tbody></table></div>
+  </section>
+
+  <section class="panel">
+    <p class="eyebrow">03 · ЦЕНА УПРАВЛЕНИЯ</p><h2>Измеренный overhead</h2>
+    <p class="muted">Подача 1000/с — открытый график поступлений скалярных AEAD-команд на одном хосте. Задержка генератора включена. Это не выполнение неподдерживаемого контракта «1024 прикладных байта». Deferred сохраняет сериализацию, откладывая дисковую запись.</p>
+    <div class="table-wrap"><table><thead><tr><th>Режим</th><th>Журнал</th><th>В срок / поступило</th><th>Решение p99, мкс</th><th>Наблюдаемые spans p99, мс</th><th>CPU процесса, с</th></tr></thead><tbody id="performance"></tbody></table></div>
+    <p class="muted">Spans — нижняя граница обработки; они не доказывают полный бюджет агента 1 мс. CPU включает совместно размещённые sender, receiver, KMS, relay и экспорт журналов.</p>
+  </section>
+
+  <section class="panel">
+    <p class="eyebrow">04 · ПЕРЕХОД К ОПЕРАТОРУ</p><h2>Что потребуется для реального пилота</h2>
+    <ol id="operator"></ol>
+    <p class="muted">Низкий RTT не подтверждает пригодность часов, а рост RTT/QBER не доказывает атаку. Лабораторный диагноз содержит признаки и альтернативы; точная локализация ограничена доступными датчиками.</p>
+  </section>
+
+  <details class="panel"><summary>Происхождение и границы результатов</summary><pre id="sources"></pre></details>
+  <footer>Исследовательский MVP. Лабораторные допущения, небольшой набор независимых эпизодов, без гарантии SLA или физической модели QKD/PTP.</footer>
+</main>
+<script id="report-data" type="application/json">__DATA__</script>
+<script>__SCRIPT__</script>
+</body>
+</html>
