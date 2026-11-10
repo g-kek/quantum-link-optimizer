@@ -20,6 +20,9 @@ class Settings:
     pacing_max_wait_ms: float | None = None
     max_in_flight: int = 8
     coalesce: bool = False
+    ewma_restart: bool = True
+    adaptive_hedge: bool = False
+    hedge_risk: float = 0.0
     kms_cooldown_ms: float = 200
     diagnostic_interval_ms: float = 50
     target_ms: float = 100
@@ -62,8 +65,13 @@ class Settings:
             type(self.require_clock) is not bool
             or type(self.shared_segment) is not bool
             or type(self.coalesce) is not bool
+            or type(self.ewma_restart) is not bool
+            or type(self.adaptive_hedge) is not bool
         ):
-            raise ValueError("clock, topology and coalesce flags must be boolean")
+            raise ValueError("selection flags must be boolean")
+
+        if type(self.hedge_risk) not in (int, float) or not 0 <= self.hedge_risk <= 1:
+            raise ValueError("hedge_risk must be a probability")
 
         if self.pacing_max_wait_ms is not None and (
             type(self.pacing_max_wait_ms) not in (float, int)

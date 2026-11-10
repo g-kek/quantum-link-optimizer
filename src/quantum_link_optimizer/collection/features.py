@@ -30,7 +30,12 @@ class History:
         self.samples = {path: deque(maxlen=window) for path in ("A", "B")}
         self.keys = {}
         self.queues = {}
+        self.restarts = {}
         self.components = ComponentHistory(max_age_ms)
+
+    def restart(self, path, available_ns):
+        """Forget the level before a step, EWMA starts again from here."""
+        self.restarts[path] = available_ns
 
     def observe(self, event):
         path = event.get("path")
@@ -53,7 +58,12 @@ class History:
         ]
         latest = history[-1] if history else None
         age = (decision_ns - latest["algorithm_available_ns"]) / 1e6 if latest else None
-        valid = [event["rtt_ms"] for event in fresh if event["status"] == "ok"]
+        since = self.restarts.get(path, 0)
+        valid = [
+            event["rtt_ms"]
+            for event in fresh
+            if event["status"] == "ok" and event["algorithm_available_ns"] >= since
+        ]
         ewma = None
         for value in valid:
             ewma = value if ewma is None else 0.3 * value + 0.7 * ewma

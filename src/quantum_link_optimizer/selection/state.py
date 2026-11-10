@@ -62,6 +62,9 @@ class Observations:
 
                 if step is not None:
                     self.steps[path] = {**step, "available_ns": available}
+
+                    if self.settings.ewma_restart:
+                        self.history.restart(path, available)
             elif fields["status"] == "timeout":
                 self.failures[path] += 1
         if event == "session_ready":
@@ -75,6 +78,14 @@ class Observations:
             self.kms_blocked_until[path] = available + int(
                 self.settings.kms_cooldown_ms * 1e6
             )
+
+    def recent_rtt(self, path, now_ns):
+        cutoff = now_ns - self.settings.max_age_ms * 1e6
+        return [
+            event["rtt_ms"]
+            for event in self.history.samples[path]
+            if event["status"] == "ok" and event["algorithm_available_ns"] >= cutoff
+        ]
 
     def snapshot(self, now_ns, senders):
         result = {}
