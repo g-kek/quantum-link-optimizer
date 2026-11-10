@@ -69,6 +69,207 @@ function svgNode(name, attributes, text) {
   return element;
 }
 
+const stageColors = {
+  source_lag: "#9fb3bf",
+  router_queue: "#bd4037",
+  key_wait: "#c58b2b",
+  send: "#5f8fa8",
+  network: "#2368b5",
+  receiver_queue: "#d4776f",
+  receiver_key: "#e0b065",
+  receiver_processing: "#7652af",
+  ack: "#8aa0ab",
+};
+const lifecycles = { open: "открыт", unobserved: "нет данных", resolved: "закрыт" };
+const units = { ms: "мс", ns: "нс", keys: "ключей", commands: "команд", probes: "проб", fraction: "", boolean: "", bytes: "байт" };
+
+function schematic(location) {
+  const root = svgNode("svg", { viewBox: "0 0 320 92", role: "img", "aria-label": "Где инцидент" });
+  const focus = new Set(location?.component ? [location.component] : location?.candidates || []);
+  const exact = Boolean(location?.component);
+  const tone = (name) => focus.has(name) ? (exact ? "#bd4037" : "#d79a2b") : "#aebdc5";
+  const box = (x, y, w, label, name) => {
+    root.append(svgNode("rect", { x, y, width: w, height: 22, rx: 5, fill: "#fff", stroke: tone(name), "stroke-width": focus.has(name) ? 2.5 : 1.2 }));
+    root.append(svgNode("text", { x: x + w / 2, y: y + 15, "text-anchor": "middle", "font-size": 10, fill: "#26394a" }, label));
+  };
+  const line = (d, name, label, ly) => {
+    root.append(svgNode("path", { d, fill: "none", stroke: tone(name), "stroke-width": focus.has(name) ? 3 : 1.5 }));
+    root.append(svgNode("text", { x: 160, y: ly, "text-anchor": "middle", "font-size": 10, fill: "#617782" }, label));
+  };
+
+  line("M70,58 C110,40 210,40 250,58", "segment:A", "A", 40);
+  line("M70,70 C110,88 210,88 250,70", "segment:B", "B", 92);
+
+  if (focus.has("shared")) {
+    root.append(svgNode("rect", { x: 140, y: 52, width: 40, height: 24, rx: 4, fill: "#fff", stroke: tone("shared"), "stroke-width": 2.5 }));
+    root.append(svgNode("text", { x: 160, y: 68, "text-anchor": "middle", "font-size": 9, fill: "#26394a" }, "общий"));
+  }
+
+  box(4, 53, 66, "Отправитель", "sender");
+  box(250, 53, 66, "Получатель", "receiver");
+  box(135, 4, 50, "KMS", "kms");
+  root.append(svgNode("path", { d: "M135,15 L37,53 M185,15 L283,53", stroke: tone("kms"), "stroke-dasharray": "3 3", fill: "none" }));
+  return root;
+}
+
+function measurementText(item) {
+  const value = typeof item.value === "number" ? number(item.value, item.unit === "fraction" ? 2 : 1) : String(item.value);
+  const unit = units[item.unit] ?? item.unit ?? "";
+  return `${item.metric}: ${value} ${unit}`.trim() + (item.age_ms != null ? ` · возраст ${number(item.age_ms, 0)} мс` : "");
+}
+
+function incidentCards(trial, cutoff) {
+  const latest = new Map();
+
+  for (const event of trial.events) {
+    if (event.kind === "incident" && event.t <= cutoff) {
+      const first = latest.get(event.id)?.firstT ?? event.t;
+      latest.set(event.id, { ...event, firstT: first });
+    }
+  }
+
+  const items = [...latest.values()]
+    .filter((item) => item.class !== "telemetry_gap")
+    .sort((a, b) => (a.lifecycle === "open" ? 0 : 1) - (b.lifecycle === "open" ? 0 : 1) || a.firstT - b.firstT);
+  const container = byId("incidents");
+  container.replaceChildren();
+
+  if (!items.length) {
+    const empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent = "Инцидентов нет";
+    container.append(empty);
+    return;
+  }
+
+  for (const item of items.slice(0, 6)) {
+    const card = document.createElement("article");
+    card.className = `incident ${item.lifecycle}`;
+    const header = document.createElement("header");
+    const title = document.createElement("h4");
+    title.textContent = `${item.title} · ${item.scope}`;
+    const chip = document.createElement("span");
+    chip.className = `chip ${item.lifecycle}`;
+    chip.textContent = lifecycles[item.lifecycle] || item.lifecycle;
+    header.append(title, chip);
+    card.append(header, schematic(item.location));
+    const list = document.createElement("dl");
+    const rows = [
+      ["Где", item.location ? `${item.location.title}${item.location.ambiguous ? " (неоднозначно)" : ""}` : "не определено"],
+      ["Замечен", `${number(item.firstT, 2)} с`],
+      ["Основания", item.measurements.map(measurementText).join("; ") || "—"],
+      ["Альтернативы", item.alternatives.join(", ") || "—"],
+      ["Действие", item.action || "—"],
+    ];
+
+    for (const [term, text] of rows) {
+      const dt = document.createElement("dt");
+      dt.textContent = term;
+      const dd = document.createElement("dd");
+      dd.textContent = text;
+      list.append(dt, dd);
+    }
+
+    card.append(list);
+    container.append(card);
+  }
+
+  if (items.length > 6) {
+    const more = document.createElement("p");
+    more.className = "muted";
+    more.textContent = `И ещё ${items.length - 6}`;
+    container.append(more);
+  }
+}
+
+function drawStages(trial, cutoff) {
+  const chart = byId("stages");
+  const legend = byId("stages-legend");
+  chart.replaceChildren();
+  legend.replaceChildren();
+
+  if (!trial.stages) {
+    byId("stages-note").textContent = "Этапы для этого прогона не записаны";
+    return;
+  }
+
+  const done = new Set(trial.events.filter((e) => e.kind === "command" && e.t <= cutoff).map((e) => e.id));
+  const commands = trial.stages.commands;
+  const top = Math.max(150, ...commands.map((c) => c.total_ms)) * 1.05;
+  const width = 1000;
+  const left = 56;
+  const bar = (width - left - 10) / Math.max(commands.length, 1);
+  const y = (value) => 215 - value / top * 195;
+
+  for (const tick of [0, 0.5, 1]) {
+    chart.append(svgNode("text", { x: 48, y: y(top * tick) + 4, "text-anchor": "end", "font-size": 10, fill: "#617782" }, number(top * tick, 0)));
+  }
+
+  chart.append(svgNode("line", { x1: left, x2: width - 10, y1: y(100), y2: y(100), stroke: "#c08b39", "stroke-dasharray": "6 5" }));
+
+  commands.forEach((command, index) => {
+    let base = 0;
+
+    for (const [stage, value] of Object.entries(command.stages_ms)) {
+      if (value <= 0) {
+        continue;
+      }
+
+      const rect = svgNode("rect", {
+        x: left + index * bar + 1,
+        y: y(base + value),
+        width: Math.max(bar - 2, 1),
+        height: Math.max(y(base) - y(base + value), 0.5),
+        fill: stageColors[stage] || "#999",
+        opacity: done.has(command.id) ? 1 : 0.25,
+      });
+      rect.append(svgNode("title", {}, `${command.id}: ${trial.stages.labels[stage]} ${number(value)} мс`));
+      chart.append(rect);
+      base += value;
+    }
+  });
+
+  for (const [stage, label] of Object.entries(trial.stages.labels)) {
+    const item = document.createElement("span");
+    item.style.color = stageColors[stage];
+    item.textContent = `■ ${label}`;
+    legend.append(item);
+  }
+
+  const tail = trial.stages.tail;
+  const largest = [...tail.stages].sort((a, b) => b.mean_ms - a.mean_ms)[0];
+  byId("stages-note").textContent =
+    `Хвост от p95: в среднем ${number(tail.mean_total_ms, 0)} мс, больше всего — ${largest.label.toLowerCase()} ${number(largest.mean_ms, 0)} мс`;
+}
+
+function accuracyCards() {
+  const data = report.diagnostics_accuracy;
+
+  if (!data) {
+    return;
+  }
+
+  const container = byId("accuracy");
+  container.hidden = false;
+  const cards = [
+    ["Инциденты найдены", `${data.detected} из ${data.expected_incidents}`, `${data.trials} эпизодов, seeds ${data.seeds.join(", ")}`],
+    ["Компонент назван верно", `${data.location_correct} из ${data.location_checked}`, "Там, где компонент известен по сценарию"],
+    ["Ложные срабатывания", `${number(data.false_alarms_per_trial, 2)} на эпизод`, data.baseline_false_alarms_per_trial != null ? `Прежние правила: ${number(data.baseline_false_alarms_per_trial, 2)}` : `Медиана обнаружения ${number(data.time_to_detect_ms_median, 0)} мс`],
+  ];
+
+  for (const [label, value, note] of cards) {
+    const article = document.createElement("article");
+    const p = document.createElement("p");
+    p.textContent = label;
+    const strong = document.createElement("strong");
+    strong.textContent = value;
+    const small = document.createElement("small");
+    small.textContent = note;
+    article.append(p, strong, small);
+    container.append(article);
+  }
+}
+
 function drawTrial() {
   const trial = selectedTrial();
 
@@ -153,6 +354,8 @@ function drawTrial() {
     last_observed_command: completed || null,
   }, null, 2);
   byId("truth").textContent = JSON.stringify(trial.truth.filter((event) => event.t <= cutoff), null, 2);
+  incidentCards(trial, cutoff);
+  drawStages(trial, cutoff);
 }
 
 function tableRow(body, values) {
@@ -190,6 +393,7 @@ for (const row of report.performance.trials) {
 }
 
 byId("sources").textContent = JSON.stringify(report.sources, null, 2);
+accuracyCards();
 options(byId("case"), [...new Set(report.trials.map((trial) => trial.case))], "swap");
 byId("case").addEventListener("change", refreshFilters);
 byId("seed").addEventListener("change", drawTrial);

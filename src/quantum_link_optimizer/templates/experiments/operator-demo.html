@@ -20,6 +20,7 @@
     <article><p>Независимые эпизоды</p><strong id="episodes"></strong><small>Одинаковая нагрузка для всех политик</small></article>
     <article class="warning"><p>Бюджет 1000/с × 1024 байта</p><strong>Не подтверждён</strong><small>Измерены скалярные команды около 310 UDP-байт</small></article>
   </section>
+  <section class="cards" id="accuracy" hidden aria-label="Точность диагностики"></section>
 
   <section class="panel">
     <div class="section-title"><div><p class="eyebrow">01 · РАЗБОР ОПЫТА</p><h2>Что происходило с командой</h2></div><button id="export">Скачать данные JSON</button></div>
@@ -34,10 +35,18 @@
     <svg id="chart" viewBox="0 0 1000 330" role="img" aria-label="RTT проб и полная задержка команд"></svg>
     <div class="playback"><button id="play">Воспроизвести</button><label class="slider">Время<input id="time" type="range" min="0" max="1000" value="1000"></label><output id="time-label"></output></div>
     <p class="muted">Пунктир — 100 мс · Исходы раскрываются по журналу · Счётчики за весь эпизод</p>
-    <div class="detail-grid">
-      <article><h3>Последнее решение</h3><pre id="decision"></pre></article>
-      <article><h3>Наблюдавшиеся ключи и очередь</h3><pre id="state"></pre></article>
-    </div>
+    <h3 class="incidents-title">Инциденты к этому моменту</h3>
+    <div class="incidents" id="incidents"></div>
+    <h3>Где теряется время</h3>
+    <p class="muted" id="stages-note"></p>
+    <svg id="stages" viewBox="0 0 1000 240" role="img" aria-label="Этапы задержки команд"></svg>
+    <div class="legend" id="stages-legend"></div>
+    <details class="engineer"><summary>Для инженера: последнее решение, ключи и очередь</summary>
+      <div class="detail-grid">
+        <article><h3>Последнее решение</h3><pre id="decision"></pre></article>
+        <article><h3>Наблюдавшиеся ключи и очередь</h3><pre id="state"></pre></article>
+      </div>
+    </details>
     <details><summary>Внесённые воздействия — только для проверки</summary><p class="muted">Ground truth стенда, недоступная контроллеру</p><pre id="truth"></pre></details>
   </section>
 
