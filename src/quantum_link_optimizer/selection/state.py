@@ -1,6 +1,7 @@
 import time
 
 from quantum_link_optimizer.collection.features import History
+from quantum_link_optimizer.diagnostics.changes import StepDetector
 
 
 class Observations:
@@ -15,6 +16,8 @@ class Observations:
         self.acks = {}
         self.inventory = None
         self.key_waits = {path: {} for path in ("A", "B")}
+        self.detectors = {path: StepDetector() for path in ("A", "B")}
+        self.steps = {}
 
     def observe(self, event, **fields):
         now = time.monotonic_ns()
@@ -55,6 +58,10 @@ class Observations:
         if event == "probe_result":
             if fields["status"] == "ok":
                 self.failures[path] = 0
+                step = self.detectors[path].update(fields["rtt_ms"])
+
+                if step is not None:
+                    self.steps[path] = {**step, "available_ns": available}
             elif fields["status"] == "timeout":
                 self.failures[path] += 1
         if event == "session_ready":
@@ -96,6 +103,7 @@ class Observations:
                 "shared" if inventory and "shared" in inventory["available"] else path
             )
             oldest_wait = min(self.key_waits[path].values(), default=now_ns)
+            step = self.steps.get(path)
 
             result[path] = {
                 "kms_pool": pool,
@@ -120,6 +128,10 @@ class Observations:
                 **features,
                 "feature_available_ns": latest,
                 "consecutive_timeouts": self.failures[path],
+                "rtt_step": step,
+                "rtt_step_age_ms": (now_ns - step["available_ns"]) / 1e6
+                if step
+                else None,
                 "kms_blocked": now_ns < self.kms_blocked_until[path],
                 "key_ready": phase == "steady",
                 "key_setup_ms": 0

@@ -2,6 +2,8 @@
 
 import time
 
+from .classes import describe
+
 
 def assess(
     snapshot,
@@ -13,9 +15,14 @@ def assess(
     now_ns=None,
     failure_threshold=2,
     admission_rejections=0,
+    thresholds=None,
 ):
     now = time.monotonic_ns() if now_ns is None else now_ns
+    thresholds = thresholds or {}
     findings = []
+
+    def limit(name, default):
+        return thresholds.get(name, default)
 
     def fresh(age):
         return age is not None and 0 <= age <= max_age_ms
@@ -33,8 +40,9 @@ def assess(
     def add(state, scope, measurements, evidence, alternatives, **extra):
         findings.append(
             {
-                "diagnostic_schema_version": 1,
+                "diagnostic_schema_version": 2,
                 "state": state,
+                **describe(state),
                 "scope": scope,
                 "status": "observed_signals",
                 "cause": "not_established",
@@ -156,7 +164,9 @@ def assess(
         waits = []
         key_age = row.get("key_observation_age_ms")
 
-        if fresh(key_age) and (row.get("last_key_wait_ms") or 0) > 10:
+        if fresh(key_age) and (row.get("last_key_wait_ms") or 0) > limit(
+            "last_key_wait_ms", 10
+        ):
             waits.append(
                 measurement(
                     "last_key_wait_ms",
@@ -167,7 +177,7 @@ def assess(
                 )
             )
 
-        if (row.get("active_key_wait_ms") or 0) > 10:
+        if (row.get("active_key_wait_ms") or 0) > limit("last_key_wait_ms", 10):
             waits.append(
                 measurement(
                     "active_key_wait_ms",
@@ -178,7 +188,9 @@ def assess(
                 )
             )
 
-        if fresh(kms_age) and (row.get("kms_request_ms") or 0) > 10:
+        if fresh(kms_age) and (row.get("kms_request_ms") or 0) > limit(
+            "kms_request_ms", 10
+        ):
             waits.append(
                 measurement(
                     "kms_request_ms",
@@ -208,7 +220,7 @@ def assess(
                 "receiver_key_wait_ns",
                 "receiver_processing_ns",
             ):
-                if (row.get(name) or 0) > 1_000_000:
+                if (row.get(name) or 0) > limit(name, 1_000_000):
                     receiver.append(
                         measurement(
                             name, row[name], "ns", receiver_age, f"receiver/{path}"
@@ -223,6 +235,24 @@ def assess(
                 [m["metric"] for m in receiver],
                 ["receiver_load", "receiver_queue", "receiver_kms_wait"],
                 evidence_age_ms={"receiver": receiver_age},
+            )
+
+        step, step_age = row.get("rtt_step"), row.get("rtt_step_age_ms")
+
+        # A step down is a recovery, only a step up is a new problem
+        if step and fresh(step_age) and step["after_ms"] > step["before_ms"]:
+            add(
+                "path_change",
+                path,
+                [
+                    measurement(
+                        "rtt_before_ms", step["before_ms"], "ms", step_age, path
+                    ),
+                    measurement("rtt_after_ms", step["after_ms"], "ms", step_age, path),
+                ],
+                ["rtt_level_step"],
+                ["route_change", "link_switchover", "sudden_congestion"],
+                cause="level_step_observed",
             )
 
         clock_age = row.get("bc_observation_age_ms")

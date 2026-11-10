@@ -1,6 +1,8 @@
 """Lifecycle events distinguish observed recovery from unavailable evidence."""
 
+from .baseline import norms
 from .rules import assess
+from .topology import healthy_observables, localize
 
 AGE_FIELDS = {
     "kms": "kms_observation_age_ms",
@@ -12,6 +14,15 @@ AGE_FIELDS = {
 }
 
 
+NORMED = (
+    ("receiver_queue_wait_ns", "receiver_observation_age_ms"),
+    ("receiver_key_wait_ns", "receiver_observation_age_ms"),
+    ("receiver_processing_ns", "receiver_observation_age_ms"),
+    ("last_key_wait_ms", "key_observation_age_ms"),
+    ("kms_request_ms", "kms_observation_age_ms"),
+)
+
+
 class IncidentTracker:
     def __init__(self, emit, max_age_ms=2000):
         self.emit = emit
@@ -19,6 +30,22 @@ class IncidentTracker:
         self.active = {}
         self.sequence = 0
         self.last_ns = 0
+        self.started_ns = None
+        self.norms = None
+
+    def thresholds(self, snapshot, now_ns, target_ms):
+        if self.norms is None:
+            self.norms = norms(target_ms)
+
+        for row in snapshot.values():
+            for name, age_field in NORMED:
+                age = row.get(age_field)
+
+                if age is not None and 0 <= age <= self.max_age_ms:
+                    observed = now_ns - int(age * 1e6)
+                    self.norms[name].observe(row.get(name), observed)
+
+        return {name: norm.threshold() for name, norm in self.norms.items()}
 
     def available(self, finding, snapshot):
         if finding["state"] == "telemetry_missing":
@@ -49,13 +76,34 @@ class IncidentTracker:
             raise ValueError("incident clock moved backwards")
 
         self.last_ns = now_ns
+
+        if self.started_ns is None:
+            self.started_ns = now_ns
+
         findings = assess(
-            snapshot, now_ns=now_ns, max_age_ms=self.max_age_ms, **context
+            snapshot,
+            now_ns=now_ns,
+            max_age_ms=self.max_age_ms,
+            thresholds=self.thresholds(snapshot, now_ns, context.get("target_ms", 100)),
+            **context,
         )
+        localize(
+            findings,
+            healthy_observables(snapshot, self.max_age_ms, findings),
+            context.get("shared_segment", False),
+        )
+        warming_up = now_ns - self.started_ns < self.max_age_ms * 1e6
         current = {}
 
         for finding in findings:
             if finding["state"] == "no_anomaly_observed":
+                continue
+
+            # Nothing has arrived yet at start, that is not a monitoring gap
+            if warming_up and finding["state"] in {
+                "telemetry_missing",
+                "telemetry_stale",
+            }:
                 continue
 
             key = finding["state"], finding["scope"]
