@@ -17,6 +17,9 @@ class Settings:
     max_attempts_per_leg: int = 2
     queue_limit: int = 64
     pacing_per_s: float = 0
+    pacing_max_wait_ms: float | None = None
+    max_in_flight: int = 8
+    coalesce: bool = False
     kms_cooldown_ms: float = 200
     diagnostic_interval_ms: float = 50
     target_ms: float = 100
@@ -50,6 +53,7 @@ class Settings:
             "extra_bytes_total",
             "max_attempts_per_leg",
             "queue_limit",
+            "max_in_flight",
         ):
             value = getattr(self, name)
             if type(value) is not int or value < (0 if name.startswith("extra") else 1):
@@ -57,5 +61,13 @@ class Settings:
         if (
             type(self.require_clock) is not bool
             or type(self.shared_segment) is not bool
+            or type(self.coalesce) is not bool
         ):
-            raise ValueError("clock and topology flags must be boolean")
+            raise ValueError("clock, topology and coalesce flags must be boolean")
+
+        if self.pacing_max_wait_ms is not None and (
+            type(self.pacing_max_wait_ms) not in (float, int)
+            or not math.isfinite(self.pacing_max_wait_ms)
+            or self.pacing_max_wait_ms < 0
+        ):
+            raise ValueError("invalid pacing_max_wait_ms")

@@ -1,10 +1,12 @@
 import asyncio
+import time
 from contextlib import asynccontextmanager
 
 from quantum_link_optimizer.collection.paths import open_path
 from quantum_link_optimizer.commands.store import Store
 from quantum_link_optimizer.kms.model import Settings as KmsSettings
 from quantum_link_optimizer.kms.service import Service
+from quantum_link_optimizer.selection.budget import Pacer
 from quantum_link_optimizer.selection.config import Settings
 from quantum_link_optimizer.selection.router import Router
 
@@ -188,5 +190,65 @@ def test_queue_is_bounded_and_lost_ack_keeps_outcome_unknown(tmp_path):
             assert results[0]["outcome"] == "unknown"
             await asyncio.sleep(0.1)
             assert store.db.execute("SELECT executions FROM state").fetchone() == (1,)
+
+    asyncio.run(exercise())
+
+
+def test_commands_arriving_faster_than_rtt_do_not_queue(tmp_path):
+    async def exercise():
+        settings = Settings(mode="fixed-a", max_attempts_per_leg=1)
+        async with laboratory(tmp_path, settings, delay_a=60) as (
+            router,
+            store,
+            events,
+        ):
+            tasks = []
+
+            for sequence in range(8):
+                tasks.append(asyncio.create_task(router.send(sequence, sequence)))
+                await asyncio.sleep(0.04)
+
+            results = await asyncio.gather(*tasks)
+            assert [r["status"] for r in results] == ["executed"] * 8
+
+            # Waiting for each ACK would leave the last command about 0.6 s late
+            assert max(r["elapsed_ns"] for r in results) < 0.3e9
+
+    asyncio.run(exercise())
+
+
+def test_newer_set_supersedes_queued_commands(tmp_path):
+    async def exercise():
+        settings = Settings(mode="fixed-a", max_in_flight=1, coalesce=True)
+        async with laboratory(tmp_path, settings, delay_a=30) as (
+            router,
+            store,
+            events,
+        ):
+            first = asyncio.create_task(router.send(0, 0))
+
+            while not any(event["event"] == "attempt_sent" for event in events):
+                await asyncio.sleep(0.001)
+
+            later = [router.send(value, value) for value in range(1, 4)]
+            results = await asyncio.gather(first, *later)
+            statuses = [r["status"] for r in results]
+            assert statuses == ["executed", "superseded", "superseded", "executed"]
+            assert results[1]["superseded_by_sequence"] == 3
+            assert store.db.execute("SELECT value FROM state").fetchone() == (3,)
+
+    asyncio.run(exercise())
+
+
+def test_pacer_refuses_at_once_when_wait_exceeds_limit():
+    async def exercise():
+        pacer = Pacer(10, max_wait_ms=20)
+        deadline = time.monotonic_ns() + int(1e9)
+
+        assert await pacer.wait(deadline)
+
+        started = time.monotonic_ns()
+        assert not await pacer.wait(deadline)
+        assert time.monotonic_ns() - started < 10e6
 
     asyncio.run(exercise())

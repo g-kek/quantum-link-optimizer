@@ -10,17 +10,24 @@ from .wire import inspect, seal, unseal
 
 
 class Sender(asyncio.DatagramProtocol):
-    def __init__(self, session, remote, emit, queue_limit=64, retry_s=0.1):
+    def __init__(
+        self, session, remote, emit, queue_limit=64, retry_s=0.1, max_in_flight=8
+    ):
         self.session = session
         self.remote = remote
         self.emit = emit
+
         if queue_limit < 1:
             raise ValueError("queue_limit must be positive")
+
+        if type(max_in_flight) is not int or max_in_flight < 1:
+            raise ValueError("max_in_flight must be a positive integer")
+
         self.queue = asyncio.Queue(maxsize=queue_limit)
         self.retry_s = retry_s
-        self.pending = None
-        self.active_future = None
-        self.active_work = None
+        self.slots = asyncio.Semaphore(max_in_flight)
+        self.pending = {}
+        self.active = {}
         self.worker = None
         self.transport = None
 
@@ -29,18 +36,37 @@ class Sender(asyncio.DatagramProtocol):
         self.worker = asyncio.create_task(self.process())
 
     def datagram_received(self, packet, address):
-        if self.pending is None or address != self.remote:
+        if not self.pending or address != self.remote:
             return
+
         processing_started = time.monotonic_ns()
-        key, body, future = self.pending
+
         try:
-            result = unseal(key, inspect(packet, "ack"), "ack")
+            envelope = inspect(packet, "ack")
+            key_id = envelope["header"]["key_id"]
+            key = next(
+                (key for key, _, _ in self.pending.values() if key.key_id == key_id),
+                None,
+            )
+
+            if key is None:
+                return
+
+            result = unseal(key, envelope, "ack")
+            entry = self.pending.get(result["id"])
+
+            if entry is None:
+                return
+
+            command_key, body, future = entry
+
             if (
-                result["id"] != body["id"]
+                command_key.key_id != key_id
                 or result["request_hash"] != fingerprint(body)
                 or future.done()
             ):
                 return
+
             result["sender_ack_processing_ns"] = (
                 time.monotonic_ns() - processing_started
             )
@@ -80,75 +106,105 @@ class Sender(asyncio.DatagramProtocol):
         try:
             return await future
         except asyncio.CancelledError:
-            if self.active_future is future and self.active_work:
-                work = self.active_work
+            work = self.active.get(future)
+
+            if work is not None:
                 work.cancel()
                 await asyncio.gather(work, return_exceptions=True)
+
             raise
 
     async def process(self):
-        while True:
-            body, started, future, reserve, max_attempts = await self.queue.get()
-            work = None
+        running = set()
 
-            cancel_work = None
-            try:
-                if future.cancelled():
-                    continue
-                work = asyncio.create_task(self.execute(body, reserve, max_attempts))
-                self.active_future, self.active_work = future, work
+        try:
+            while True:
+                item = await self.queue.get()
 
-                def cancel_work(completed, work=work):
-                    if completed.cancelled():
-                        work.cancel()
-
-                future.add_done_callback(cancel_work)
-                result = await work
-                self.emit(
-                    "command_completed",
-                    command_id=body["id"],
-                    session=self.session.id,
-                    path=self.session.path,
-                    elapsed_ns=time.monotonic_ns() - started,
-                    **result,
-                )
-                if not future.done():
-                    future.set_result({"id": body["id"], **result})
-            except (ValueError, KmsError, TimeoutError) as error:
-                status = (
-                    "kms_error"
-                    if isinstance(error, KmsError)
-                    else "invalid_command"
-                    if isinstance(error, ValueError)
-                    else "timeout"
-                )
-                self.emit(
-                    "command_completed",
-                    command_id=body["id"],
-                    status=status,
-                    reason=str(error)
-                    if isinstance(error, KmsError)
-                    else type(error).__name__,
-                    session=self.session.id,
-                    path=self.session.path,
-                    elapsed_ns=time.monotonic_ns() - started,
-                )
-                if not future.done():
-                    future.set_result({"id": body["id"], "status": status})
-            except asyncio.CancelledError:
-                future.cancel()
-                if asyncio.current_task().cancelling():
+                try:
+                    await self.slots.acquire()
+                except asyncio.CancelledError:
+                    item[2].cancel()
+                    self.queue.task_done()
                     raise
-                self.emit(
-                    "leg_abandoned", command_id=body["id"], path=self.session.path
-                )
 
-            finally:
-                if cancel_work:
-                    future.remove_done_callback(cancel_work)
-                self.active_future, self.active_work = None, None
-                self.pending = None
-                self.queue.task_done()
+                task = asyncio.create_task(self.handle(*item))
+                running.add(task)
+                task.add_done_callback(running.discard)
+        finally:
+            for task in running:
+                task.cancel()
+
+            await asyncio.gather(*running, return_exceptions=True)
+
+    async def handle(self, body, started, future, reserve, max_attempts):
+        work = None
+        cancel_work = None
+
+        try:
+            if future.cancelled():
+                return
+
+            work = asyncio.create_task(self.execute(body, reserve, max_attempts))
+            self.active[future] = work
+
+            def cancel_work(completed, work=work):
+                if completed.cancelled():
+                    work.cancel()
+
+            future.add_done_callback(cancel_work)
+            result = await work
+            self.emit(
+                "command_completed",
+                command_id=body["id"],
+                session=self.session.id,
+                path=self.session.path,
+                elapsed_ns=time.monotonic_ns() - started,
+                **result,
+            )
+
+            if not future.done():
+                future.set_result({"id": body["id"], **result})
+        except (ValueError, KmsError, TimeoutError) as error:
+            if isinstance(error, KmsError):
+                status = "kms_error"
+            elif isinstance(error, ValueError):
+                status = "invalid_command"
+            else:
+                status = "timeout"
+
+            self.emit(
+                "command_completed",
+                command_id=body["id"],
+                status=status,
+                reason=str(error)
+                if isinstance(error, KmsError)
+                else type(error).__name__,
+                session=self.session.id,
+                path=self.session.path,
+                elapsed_ns=time.monotonic_ns() - started,
+            )
+
+            if not future.done():
+                future.set_result({"id": body["id"], "status": status})
+        except asyncio.CancelledError:
+            future.cancel()
+
+            if work is not None and not work.done():
+                work.cancel()
+
+            if asyncio.current_task().cancelling():
+                raise
+
+            self.emit("leg_abandoned", command_id=body["id"], path=self.session.path)
+        finally:
+            if cancel_work:
+                future.remove_done_callback(cancel_work)
+
+            self.active.pop(future, None)
+            self.pending.pop(body["id"], None)
+            self.slots.release()
+            self.queue.task_done()
 
     async def execute(self, body, reserve=None, max_attempts=None):
         remaining = (body["deadline_ns"] - time.monotonic_ns()) / 1e9
@@ -173,7 +229,7 @@ class Sender(asyncio.DatagramProtocol):
             key_wait_ns=time.monotonic_ns() - key_started,
         )
         ack = asyncio.get_running_loop().create_future()
-        self.pending = key, body, ack
+        self.pending[body["id"]] = key, body, ack
         attempt = 0
         while (remaining := (body["deadline_ns"] - time.monotonic_ns()) / 1e9) > 0:
             can_send = max_attempts is None or attempt < max_attempts

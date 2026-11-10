@@ -93,7 +93,7 @@ def test_ack_for_reused_id_with_different_body_is_not_accepted():
         old = create(1, 1, command_id="reused")
         current = create(2, 1, command_id="reused")
         future = asyncio.get_running_loop().create_future()
-        sender.pending = key, current, future
+        sender.pending = {current["id"]: (key, current, future)}
         result = {
             "id": "reused",
             "status": "executed",

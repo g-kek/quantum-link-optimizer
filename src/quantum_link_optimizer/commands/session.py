@@ -1,3 +1,4 @@
+import asyncio
 import time
 import uuid
 from typing import Protocol
@@ -24,6 +25,7 @@ class Session:
         self.key = None
         self.used = 0
         self.issued_at = 0
+        self.lock = asyncio.Lock()
 
     def phase(self):
         now = time.monotonic()
@@ -38,15 +40,24 @@ class Session:
         return "steady"
 
     async def acquire(self, timeout_s):
-        phase = self.phase()
-        if phase != "steady":
-            self.key = await self.adapter.request(
-                "issue",
-                session=self.id,
-                path=self.path,
-                timeout_s=timeout_s,
-            )
-            self.issued_at = time.monotonic()
-            self.used = 0
-        self.used += 1
-        return self.key, phase
+        # Several commands may be in flight, only one of them rotates the key
+        async with asyncio.timeout(timeout_s):
+            await self.lock.acquire()
+
+        try:
+            phase = self.phase()
+
+            if phase != "steady":
+                self.key = await self.adapter.request(
+                    "issue",
+                    session=self.id,
+                    path=self.path,
+                    timeout_s=timeout_s,
+                )
+                self.issued_at = time.monotonic()
+                self.used = 0
+
+            self.used += 1
+            return self.key, phase
+        finally:
+            self.lock.release()

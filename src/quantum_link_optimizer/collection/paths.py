@@ -46,6 +46,7 @@ async def open_path(
         proxy.get_extra_info("sockname"),
         sender_log,
         queue_limit=config["queue_limit"],
+        max_in_flight=config.get("max_in_flight", 8),
     )
     await loop.create_datagram_endpoint(lambda: sender, local_addr=("127.0.0.1", 0))
     resources["agents"].append(sender)

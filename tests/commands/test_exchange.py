@@ -118,7 +118,7 @@ def test_kms_wait_counts_against_command_deadline(tmp_path):
         try:
             result = await sender.send(1, 1, deadline_s=0.03)
             assert result["status"] == "kms_error"
-            assert sender.pending is None
+            assert sender.pending == {}
         finally:
             await sender.close()
 

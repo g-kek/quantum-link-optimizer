@@ -29,8 +29,9 @@ class Router:
             settings.extra_bytes_per_command, settings.extra_bytes_total
         )
         self.sent_commands = set()
-        self.pacer = Pacer(settings.pacing_per_s)
+        self.pacer = Pacer(settings.pacing_per_s, settings.pacing_max_wait_ms)
         self.queue = asyncio.Queue(maxsize=settings.queue_limit)
+        self.newest_sequence = None
         self.incidents = IncidentTracker(emit, settings.max_age_ms)
         self.admission_rejections = 0
         self.last_rejection_ns = 0
@@ -68,6 +69,10 @@ class Router:
             self.last_rejection_ns = time.monotonic_ns()
             result = {"status": "queue_full", "outcome": "not_sent", "path": None}
             self.complete(body, started, future, result)
+        else:
+            if self.newest_sequence is None or body["sequence"] > self.newest_sequence:
+                self.newest_sequence = body["sequence"]
+
         return await future
 
     def complete(self, body, started, future, result):
@@ -88,46 +93,91 @@ class Router:
             future.set_result({"id": body["id"], **result})
 
     async def process(self):
-        while True:
-            body, started, future, copy_allowed = await self.queue.get()
-            work = None
-            cancel_work = None
-            try:
-                if future.cancelled():
-                    continue
-                work = asyncio.create_task(self.execute(body, started, copy_allowed))
+        slots = asyncio.Semaphore(self.settings.max_in_flight)
+        running = set()
 
-                def cancel_work(completed, work=work):
-                    if completed.cancelled():
-                        work.cancel()
+        try:
+            while True:
+                item = await self.queue.get()
 
-                future.add_done_callback(cancel_work)
-                result = await work
-                self.complete(body, started, future, result)
-            except asyncio.CancelledError:
-                future.cancel()
-                if asyncio.current_task().cancelling():
+                try:
+                    await slots.acquire()
+                except asyncio.CancelledError:
+                    item[2].cancel()
+                    self.queue.task_done()
                     raise
-                self.complete(
-                    body,
-                    started,
-                    future,
-                    {
-                        "status": "cancelled",
-                        "path": None,
-                        "outcome": "unknown"
-                        if body["id"] in self.sent_commands
-                        else "not_sent",
-                    },
-                )
-            except Exception as error:
-                if not future.done():
-                    future.set_exception(error)
-                self.emit("controller_error", error=type(error).__name__)
-            finally:
-                if cancel_work:
-                    future.remove_done_callback(cancel_work)
-                self.queue.task_done()
+
+                task = asyncio.create_task(self.handle(slots, *item))
+                running.add(task)
+                task.add_done_callback(running.discard)
+        finally:
+            for task in running:
+                task.cancel()
+
+            await asyncio.gather(*running, return_exceptions=True)
+
+    def superseded(self, body):
+        # A newer set() makes this value obsolete, the receiver would mark it stale
+        return (
+            self.settings.coalesce
+            and self.newest_sequence is not None
+            and body["sequence"] < self.newest_sequence
+        )
+
+    async def handle(self, slots, body, started, future, copy_allowed):
+        work = None
+        cancel_work = None
+
+        try:
+            if future.cancelled():
+                return
+
+            if self.superseded(body):
+                result = {
+                    "status": "superseded",
+                    "outcome": "not_sent",
+                    "path": None,
+                    "superseded_by_sequence": self.newest_sequence,
+                }
+                self.complete(body, started, future, result)
+                return
+
+            work = asyncio.create_task(self.execute(body, started, copy_allowed))
+
+            def cancel_work(completed, work=work):
+                if completed.cancelled():
+                    work.cancel()
+
+            future.add_done_callback(cancel_work)
+            result = await work
+            self.complete(body, started, future, result)
+        except asyncio.CancelledError:
+            future.cancel()
+
+            if work is not None and not work.done():
+                work.cancel()
+
+            if asyncio.current_task().cancelling():
+                raise
+
+            outcome = "unknown" if body["id"] in self.sent_commands else "not_sent"
+            self.complete(
+                body,
+                started,
+                future,
+                {"status": "cancelled", "path": None, "outcome": outcome},
+            )
+        except Exception as error:
+            if not future.done():
+                future.set_exception(error)
+
+            self.emit("controller_error", error=type(error).__name__)
+        finally:
+            if cancel_work:
+                future.remove_done_callback(cancel_work)
+
+            slots.release()
+            self.queue.task_done()
 
     async def execute(self, body, started, copy_allowed):
         if time.monotonic_ns() >= body["deadline_ns"]:
