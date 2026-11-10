@@ -1,0 +1,1 @@
+{"seeds": [5001, 5003], "cases": ["normal", "swap", "ramp-a", "periodic-a", "slow-kms", "loss-a", "key-exhaustion"], "policies": ["fixed-a", "fixed-b", "ewma-before", "last", "ewma", "ewma-copies", "ewma-risk-copies"], "commands": 22, "interval_s": 0.075}

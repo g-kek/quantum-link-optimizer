@@ -240,6 +240,24 @@ async def run_trial(config, output, settings=None, policy_factory=None):
 
                     logs["truth"].emit("fault", cause="path_swap", sequence=sequence)
 
+                for change in config.get("schedule", ()):
+                    if change["sequence"] != sequence:
+                        continue
+
+                    for relay in paths[change["path"]][2]:
+                        relay.settings = {
+                            direction: {"delay_ms": change["delay_ms"]}
+                            for direction in ("forward", "reverse")
+                        }
+
+                    logs["truth"].emit(
+                        "fault",
+                        cause="scheduled_delay",
+                        sequence=sequence,
+                        path=change["path"],
+                        delay_ms=change["delay_ms"],
+                    )
+
                 if (
                     config["case"] == "receiver-restart"
                     and sequence == config["count"] // 2

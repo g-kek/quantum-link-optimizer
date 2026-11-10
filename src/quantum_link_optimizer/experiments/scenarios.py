@@ -1,12 +1,22 @@
 """Declared laboratory conditions, never used as model input."""
 
+import math
 from copy import deepcopy
 
 CASES = ("normal", "swap", "common-700", "slow-kms", "key-exhaustion")
 
+# Changes that build up over several commands, a forecast has something to see
+SLOW_CHANGES = ("ramp-a", "periodic-a")
+
 
 def configuration(case, seed, count=18, interval_s=0.1, max_in_flight=8):
-    if case not in {*CASES, "shared-queue", "receiver-restart", "loss-a"}:
+    if case not in {
+        *CASES,
+        *SLOW_CHANGES,
+        "shared-queue",
+        "receiver-restart",
+        "loss-a",
+    }:
         raise ValueError("unknown laboratory case")
 
     config = {
@@ -63,5 +73,21 @@ def configuration(case, seed, count=18, interval_s=0.1, max_in_flight=8):
 
     if case == "loss-a":
         config["network"]["A"]["forward"]["loss_pct"] = 25
+
+    if case == "ramp-a":
+        config["schedule"] = [
+            {"sequence": n, "path": "A", "delay_ms": 30 + 50 * n / max(count - 1, 1)}
+            for n in range(count)
+        ]
+
+    if case == "periodic-a":
+        config["schedule"] = [
+            {
+                "sequence": n,
+                "path": "A",
+                "delay_ms": 50 + 30 * math.sin(2 * math.pi * n / 8),
+            }
+            for n in range(count)
+        ]
 
     return deepcopy(config)
