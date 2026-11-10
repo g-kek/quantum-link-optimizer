@@ -55,7 +55,12 @@ def trial_metrics(path, summary, case):
     for decision in routes:
         findings = decision["diagnostics"]
         statuses.update(f["status"] for f in findings)
-        signalled = any("observed_key_wait" in f.get("evidence", []) for f in findings)
+        # An empty pool is a KMS signal as much as a slow one
+        signalled = any(
+            f.get("state") in {"kms_delay", "key_pool_empty"}
+            or "observed_key_wait" in f.get("evidence", [])
+            for f in findings
+        )
         inventory = next(
             (
                 e
