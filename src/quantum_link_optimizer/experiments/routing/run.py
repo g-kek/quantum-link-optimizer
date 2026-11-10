@@ -15,9 +15,9 @@ from quantum_link_optimizer.telemetry_lab.report import records
 POLICIES = {
     "fixed-a": ({"mode": "fixed-a"}, {}),
     "fixed-b": ({"mode": "fixed-b"}, {}),
-    "ewma-before": ({"mode": "ewma", "ewma_restart": False}, {"prefetch_keys": False}),
+    "ewma-before": ({"mode": "ewma"}, {"prefetch_keys": False}),
     "last": ({"mode": "last"}, {}),
-    "ewma": ({"mode": "ewma"}, {}),
+    "ewma": ({"mode": "ewma", "ewma_restart": True}, {}),
     "ewma-copies": ({"mode": "ewma", "hedge_delay_ms": 40}, {}),
     "ewma-risk-copies": (
         {

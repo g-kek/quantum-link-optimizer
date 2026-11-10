@@ -20,7 +20,7 @@ class Settings:
     pacing_max_wait_ms: float | None = None
     max_in_flight: int = 8
     coalesce: bool = False
-    ewma_restart: bool = True
+    ewma_restart: bool = False
     adaptive_hedge: bool = False
     hedge_risk: float = 0.0
     kms_cooldown_ms: float = 200
