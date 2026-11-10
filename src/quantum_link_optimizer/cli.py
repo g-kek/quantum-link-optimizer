@@ -236,6 +236,15 @@ def main() -> None:
     )
     breakdown.add_argument("--run", type=Path, required=True)
     breakdown.add_argument("--output", type=Path, default=None)
+    forecast = commands.add_parser(
+        "forecast", help="Forecast path RTT and the chance to exceed the target"
+    )
+    forecast.add_argument("--input", type=Path, default=None)
+    forecast.add_argument("--output", type=Path, default=Path("artifacts/forecast"))
+    forecast.add_argument("--days", type=int, default=10)
+    forecast.add_argument("--seed", type=int, default=42)
+    forecast.add_argument("--epochs", type=int, default=40)
+    forecast.add_argument("--target-ms", type=float, default=100.0)
     demo = commands.add_parser("demo", help="Build a standalone synthetic MVP report")
     demo.add_argument("--output", type=Path, default=Path("artifacts/demo"))
     demo.add_argument("--samples", type=int, default=4000)
@@ -292,6 +301,26 @@ def main() -> None:
                 print(f"{part['label']:<24} {part['mean_ms']:8.1f} ms")
 
             print(f"Tail p95 {result['p95_ms']:.1f} ms: {result['largest_tail_stage']}")
+        elif args.command == "forecast":
+            from quantum_link_optimizer.forecast.run import run_forecast
+
+            report = run_forecast(
+                args.output,
+                args.input,
+                days=args.days,
+                seed=args.seed,
+                target_ms=args.target_ms,
+                epochs=args.epochs,
+            )
+
+            for result in report["results"].values():
+                horizon = result["horizons"][min(1, len(result["horizons"]) - 1)]
+                print(
+                    f"{result['title']:<22} Brier {horizon['breach']['brier']:.4f} "
+                    f"coverage {horizon['band']['coverage_80']:.2f}"
+                )
+
+            print(args.output / "index.html")
         elif args.command == "generate":
             write_telemetry(args.output, generate_telemetry(args.samples, args.seed))
             print(f"Synthetic telemetry: {args.output}")
