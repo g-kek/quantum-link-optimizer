@@ -45,17 +45,20 @@ async def validate(development, plan, output):
             for case in plan["cases"]:
                 for name in plan["policies"]:
                     policy = available[name]
+                    window = plan.get("max_in_flight", 8)
                     config = configuration(
                         case,
                         seed,
                         count=plan["commands"],
                         interval_s=plan["interval_s"],
+                        max_in_flight=window,
                     )
                     config["frozen_policy_sha256"] = frozen_sha
                     settings = Settings(
                         min_hold_ms=0,
                         switch_margin_ms=5,
                         shared_segment=case == "shared-queue",
+                        max_in_flight=window,
                         **policy["settings"],
                     )
                     factory = (

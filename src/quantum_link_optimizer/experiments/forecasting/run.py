@@ -40,7 +40,8 @@ def policies():
                         "settings": {
                             "mode": "ewma",
                             "hedge_delay_ms": 40 if copies else None,
-                            "pacing_per_s": 5 if pacing else 0,
+                            "pacing_per_s": 20 if pacing else 0,
+                            "pacing_max_wait_ms": 20 if pacing else None,
                             "extra_bytes_total": 12000,
                         },
                     }

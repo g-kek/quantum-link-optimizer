@@ -5,7 +5,7 @@ from copy import deepcopy
 CASES = ("normal", "swap", "common-700", "slow-kms", "key-exhaustion")
 
 
-def configuration(case, seed, count=18, interval_s=0.1):
+def configuration(case, seed, count=18, interval_s=0.1, max_in_flight=8):
     if case not in {*CASES, "shared-queue", "receiver-restart", "loss-a"}:
         raise ValueError("unknown laboratory case")
 
@@ -20,6 +20,7 @@ def configuration(case, seed, count=18, interval_s=0.1):
         "probe_interval_s": 0.05,
         "key_horizon_s": 0.25,
         "queue_limit": 64,
+        "max_in_flight": max_in_flight,
         "probe_limit": 64,
         "probe_timeout_s": 1.2,
         "rotate_after": 4,
