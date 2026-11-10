@@ -43,6 +43,19 @@ Python 3.12–3.13 · PyTorch CPU · UDP/TCP · Apache 2.0
 [Точность диагностики](docs/validation/diagnostics.md) ·
 [LSTM и результаты](docs/research/forecast-benefit.md#эксперимент-с-lstm)
 
+## Прогноз задержки
+
+Для каждого пути на 1, 5 и 15 минут вперёд — диапазон RTT p10–p90 и вероятность
+минуты выше цели, интервал и вероятность откалиброваны на validation
+На синтетической неделе с предвестниками сеть предупредила 22 из 25 превышений
+за 3–4 минуты против 11 из 25 за 10–15 с у последнего значения,
+внезапные ступени не предсказываются
+[Прогноз](docs/research/forecast.md) · [Политики на стенде](docs/validation/routing.md)
+
+```bash
+uv run quantum-link forecast --output artifacts/forecast-01
+```
+
 ## Запуск отчёта
 
 ```bash

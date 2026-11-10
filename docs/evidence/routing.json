@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "scope": "Laboratory loopback, seeds 5001/5003, 22 commands at 13.3/s, 8 in flight",
+  "report_sha256": "8fd320eeb307e6a9b79b74c51a94c2afe863a8735cef5c67d31a5679a2f40aec",
+  "policies": {
+    "ewma-before": "EWMA without restart and without key prefetch",
+    "last": "Last probe RTT",
+    "ewma": "EWMA restarted after a detected step, key prefetch",
+    "ewma-copies": "Copy after a fixed 40 ms",
+    "ewma-risk-copies": "Copy after p90 of primary RTT when slow probes >= 10%"
+  },
+  "by_case": {
+    "key-exhaustion": {
+      "offered": 44,
+      "timely": {
+        "fixed-a": 6,
+        "fixed-b": 1,
+        "ewma-before": 6,
+        "last": 6,
+        "ewma": 6,
+        "ewma-copies": 4,
+        "ewma-risk-copies": 4
+      },
+      "best_fixed": 6,
+      "network_ceiling": 44,
+      "extra_path_bytes": {
+        "fixed-a": 0,
+        "fixed-b": 0,
+        "ewma-before": 0,
+        "last": 0,
+        "ewma": 0,
+        "ewma-copies": 660,
+        "ewma-risk-copies": 660
+      }
+    },
+    "loss-a": {
+      "offered": 44,
+      "timely": {
+        "fixed-a": 30,
+        "fixed-b": 18,
+        "ewma-before": 30,
+        "last": 28,
+        "ewma": 30,
+        "ewma-copies": 29,
+        "ewma-risk-copies": 29
+      },
+      "best_fixed": 30,
+      "network_ceiling": 44,
+      "extra_path_bytes": {
+        "fixed-a": 0,
+        "fixed-b": 0,
+        "ewma-before": 0,
+        "last": 0,
+        "ewma": 0,
+        "ewma-copies": 14946,
+        "ewma-risk-copies": 1980
+      }
+    },
+    "normal": {
+      "offered": 44,
+      "timely": {
+        "fixed-a": 44,
+        "fixed-b": 15,
+        "ewma-before": 44,
+        "last": 43,
+        "ewma": 44,
+        "ewma-copies": 44,
+        "ewma-risk-copies": 44
+      },
+      "best_fixed": 44,
+      "network_ceiling": 44,
+      "extra_path_bytes": {
+        "fixed-a": 0,
+        "fixed-b": 0,
+        "ewma-before": 0,
+        "last": 0,
+        "ewma": 0,
+        "ewma-copies": 14616,
+        "ewma-risk-copies": 660
+      }
+    },
+    "periodic-a": {
+      "offered": 44,
+      "timely": {
+        "fixed-a": 14,
+        "fixed-b": 17,
+        "ewma-before": 10,
+        "last": 13,
+        "ewma": 5,
+        "ewma-copies": 10,
+        "ewma-risk-copies": 9
+      },
+      "best_fixed": 17,
+      "network_ceiling": 44,
+      "extra_path_bytes": {
+        "fixed-a": 0,
+        "fixed-b": 0,
+        "ewma-before": 0,
+        "last": 0,
+        "ewma": 0,
+        "ewma-copies": 14616,
+        "ewma-risk-copies": 7308
+      }
+    },
+    "ramp-a": {
+      "offered": 44,
+      "timely": {
+        "fixed-a": 14,
+        "fixed-b": 31,
+        "ewma-before": 17,
+        "last": 22,
+        "ewma": 19,
+        "ewma-copies": 23,
+        "ewma-risk-copies": 25
+      },
+      "best_fixed": 31,
+      "network_ceiling": 44,
+      "extra_path_bytes": {
+        "fixed-a": 0,
+        "fixed-b": 0,
+        "ewma-before": 0,
+        "last": 0,
+        "ewma": 0,
+        "ewma-copies": 14616,
+        "ewma-risk-copies": 2330
+      }
+    },
+    "slow-kms": {
+      "offered": 44,
+      "timely": {
+        "fixed-a": 0,
+        "fixed-b": 0,
+        "ewma-before": 0,
+        "last": 0,
+        "ewma": 0,
+        "ewma-copies": 0,
+        "ewma-risk-copies": 0
+      },
+      "best_fixed": 0,
+      "network_ceiling": 44,
+      "extra_path_bytes": {
+        "fixed-a": 0,
+        "fixed-b": 0,
+        "ewma-before": 0,
+        "last": 0,
+        "ewma": 0,
+        "ewma-copies": 17876,
+        "ewma-risk-copies": 1320
+      }
+    },
+    "swap": {
+      "offered": 44,
+      "timely": {
+        "fixed-a": 22,
+        "fixed-b": 22,
+        "ewma-before": 37,
+        "last": 38,
+        "ewma": 39,
+        "ewma-copies": 44,
+        "ewma-risk-copies": 39
+      },
+      "best_fixed": 22,
+      "network_ceiling": 44,
+      "extra_path_bytes": {
+        "fixed-a": 0,
+        "fixed-b": 0,
+        "ewma-before": 0,
+        "last": 0,
+        "ewma": 0,
+        "ewma-copies": 14616,
+        "ewma-risk-copies": 330
+      }
+    }
+  },
+  "note": "network_ceiling ignores keys and queues, an optimistic upper estimate"
+}

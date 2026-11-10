@@ -1,0 +1,823 @@
+{
+  "schema_version": 1,
+  "scope": "Synthetic 10-day series with declared mechanisms, not operator data",
+  "report_sha256": "8ae226c913484f23ff85fa230b955234e5608bdc9146631d11078e9d722f4a37",
+  "source": {
+    "kind": "synthetic",
+    "days": 10,
+    "seed": 42
+  },
+  "rows": {
+    "train": 103500,
+    "validation": 34380,
+    "test": 34380
+  },
+  "step_s": 10,
+  "definitions": {
+    "band": "Интервал p10–p90 RTT в момент t+h после конформной поправки",
+    "breach": "Хотя бы одна минута в (t, t+h] с медианой RTT выше цели",
+    "warning": "Порог тревоги выбран по F1 на validation, тревога засчитана, если включилась до начала превышения в пределах горизонта и держалась до него"
+  },
+  "results": {
+    "model": [
+      {
+        "horizon_s": 60,
+        "band": {
+          "samples": 34380,
+          "median_abs_error_ms": 3.933387474345693,
+          "coverage_80": 0.8028504944735311,
+          "band_width_ms": 12.665386673301194
+        },
+        "breach": {
+          "samples": 34380,
+          "base_rate": 0.21794648051192553,
+          "brier": 0.0040263405435991195,
+          "auc": 0.9994468002272423,
+          "precision": 0.9912704807950578,
+          "recall": 0.9850527158681436
+        },
+        "alarm_threshold": 0.5484619714663276,
+        "onsets": 25,
+        "warned": 14,
+        "median_lead_s_by_path": {
+          "A": 60.0,
+          "B": 15.0
+        },
+        "false_alarms_per_day": 3.0,
+        "by_episode_by_path": {
+          "A": {
+            "background": {
+              "onsets": 2,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "keys": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "load": {
+              "onsets": 14,
+              "warned": 10,
+              "median_lead_s": 60.0
+            },
+            "sudden": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            }
+          },
+          "B": {
+            "background": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "keys": {
+              "onsets": 2,
+              "warned": 1,
+              "median_lead_s": 20.0
+            },
+            "load": {
+              "onsets": 4,
+              "warned": 3,
+              "median_lead_s": 10.0
+            }
+          }
+        }
+      },
+      {
+        "horizon_s": 300,
+        "band": {
+          "samples": 34380,
+          "median_abs_error_ms": 4.03430544416468,
+          "coverage_80": 0.8136707388016289,
+          "band_width_ms": 13.755365098780532
+        },
+        "breach": {
+          "samples": 34380,
+          "base_rate": 0.22952297847585806,
+          "brier": 0.008098459226373034,
+          "auc": 0.997250712462454,
+          "precision": 0.9795422580232707,
+          "recall": 0.9708528703586364
+        },
+        "alarm_threshold": 0.49048046248211136,
+        "onsets": 25,
+        "warned": 22,
+        "median_lead_s_by_path": {
+          "A": 250.0,
+          "B": 205.0
+        },
+        "false_alarms_per_day": 10.0,
+        "by_episode_by_path": {
+          "A": {
+            "background": {
+              "onsets": 2,
+              "warned": 1,
+              "median_lead_s": 200.0
+            },
+            "keys": {
+              "onsets": 1,
+              "warned": 1,
+              "median_lead_s": 230.0
+            },
+            "load": {
+              "onsets": 14,
+              "warned": 14,
+              "median_lead_s": 285.0
+            },
+            "sudden": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            }
+          },
+          "B": {
+            "background": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "keys": {
+              "onsets": 2,
+              "warned": 2,
+              "median_lead_s": 30.0
+            },
+            "load": {
+              "onsets": 4,
+              "warned": 4,
+              "median_lead_s": 260.0
+            }
+          }
+        }
+      },
+      {
+        "horizon_s": 900,
+        "band": {
+          "samples": 34380,
+          "median_abs_error_ms": 4.032427361146009,
+          "coverage_80": 0.8162012798138453,
+          "band_width_ms": 14.000853077043946
+        },
+        "breach": {
+          "samples": 34380,
+          "base_rate": 0.2475567190226876,
+          "brier": 0.01382822225798511,
+          "auc": 0.9932150028855519,
+          "precision": 0.9823321554770318,
+          "recall": 0.9472447420984608
+        },
+        "alarm_threshold": 0.45563549362833594,
+        "onsets": 25,
+        "warned": 23,
+        "median_lead_s_by_path": {
+          "A": 900.0,
+          "B": 475.0
+        },
+        "false_alarms_per_day": 8.0,
+        "by_episode_by_path": {
+          "A": {
+            "background": {
+              "onsets": 2,
+              "warned": 2,
+              "median_lead_s": 480.0
+            },
+            "keys": {
+              "onsets": 1,
+              "warned": 1,
+              "median_lead_s": 900.0
+            },
+            "load": {
+              "onsets": 14,
+              "warned": 14,
+              "median_lead_s": 900.0
+            },
+            "sudden": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            }
+          },
+          "B": {
+            "background": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "keys": {
+              "onsets": 2,
+              "warned": 2,
+              "median_lead_s": 180.0
+            },
+            "load": {
+              "onsets": 4,
+              "warned": 4,
+              "median_lead_s": 540.0
+            }
+          }
+        }
+      }
+    ],
+    "persistence": [
+      {
+        "horizon_s": 60,
+        "band": {
+          "samples": 34380,
+          "median_abs_error_ms": 5.6657210503055,
+          "coverage_80": 0.7892088423502036,
+          "band_width_ms": 25.507359072216236
+        },
+        "breach": {
+          "samples": 34380,
+          "base_rate": 0.21794648051192553,
+          "brier": 0.01088523992680051,
+          "auc": 0.9732126473966545,
+          "precision": 0.9670257488176563,
+          "recall": 0.9823835579874549
+        },
+        "alarm_threshold": 0.9628451640884776,
+        "onsets": 25,
+        "warned": 11,
+        "median_lead_s_by_path": {
+          "A": 10.0,
+          "B": 15.0
+        },
+        "false_alarms_per_day": 109.0,
+        "by_episode_by_path": {
+          "A": {
+            "background": {
+              "onsets": 2,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "keys": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "load": {
+              "onsets": 14,
+              "warned": 6,
+              "median_lead_s": 10.0
+            },
+            "sudden": {
+              "onsets": 1,
+              "warned": 1,
+              "median_lead_s": 20.0
+            }
+          },
+          "B": {
+            "background": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "keys": {
+              "onsets": 2,
+              "warned": 2,
+              "median_lead_s": 15.0
+            },
+            "load": {
+              "onsets": 4,
+              "warned": 2,
+              "median_lead_s": 15.0
+            }
+          }
+        }
+      },
+      {
+        "horizon_s": 300,
+        "band": {
+          "samples": 34380,
+          "median_abs_error_ms": 5.718174465955116,
+          "coverage_80": 0.7974985456660849,
+          "band_width_ms": 27.022768628570333
+        },
+        "breach": {
+          "samples": 34380,
+          "base_rate": 0.22952297847585806,
+          "brier": 0.018413555465211107,
+          "auc": 0.9349482378635072,
+          "precision": 0.9759590120861797,
+          "recall": 0.9414522874160436
+        },
+        "alarm_threshold": 0.96992916004048,
+        "onsets": 25,
+        "warned": 11,
+        "median_lead_s_by_path": {
+          "A": 10.0,
+          "B": 15.0
+        },
+        "false_alarms_per_day": 82.0,
+        "by_episode_by_path": {
+          "A": {
+            "background": {
+              "onsets": 2,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "keys": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "load": {
+              "onsets": 14,
+              "warned": 6,
+              "median_lead_s": 10.0
+            },
+            "sudden": {
+              "onsets": 1,
+              "warned": 1,
+              "median_lead_s": 20.0
+            }
+          },
+          "B": {
+            "background": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "keys": {
+              "onsets": 2,
+              "warned": 2,
+              "median_lead_s": 15.0
+            },
+            "load": {
+              "onsets": 4,
+              "warned": 2,
+              "median_lead_s": 15.0
+            }
+          }
+        }
+      },
+      {
+        "horizon_s": 900,
+        "band": {
+          "samples": 34380,
+          "median_abs_error_ms": 5.748631009855586,
+          "coverage_80": 0.8031995346131472,
+          "band_width_ms": 29.215406950267347
+        },
+        "breach": {
+          "samples": 34380,
+          "base_rate": 0.2475567190226876,
+          "brier": 0.03220530363380983,
+          "auc": 0.8755853783670996,
+          "precision": 0.9837099316868103,
+          "recall": 0.8798026083891435
+        },
+        "alarm_threshold": 0.9790371548359116,
+        "onsets": 25,
+        "warned": 11,
+        "median_lead_s_by_path": {
+          "A": 10.0,
+          "B": 15.0
+        },
+        "false_alarms_per_day": 56.5,
+        "by_episode_by_path": {
+          "A": {
+            "background": {
+              "onsets": 2,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "keys": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "load": {
+              "onsets": 14,
+              "warned": 6,
+              "median_lead_s": 10.0
+            },
+            "sudden": {
+              "onsets": 1,
+              "warned": 1,
+              "median_lead_s": 20.0
+            }
+          },
+          "B": {
+            "background": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "keys": {
+              "onsets": 2,
+              "warned": 2,
+              "median_lead_s": 15.0
+            },
+            "load": {
+              "onsets": 4,
+              "warned": 2,
+              "median_lead_s": 15.0
+            }
+          }
+        }
+      }
+    ],
+    "median_5m": [
+      {
+        "horizon_s": 60,
+        "band": {
+          "samples": 34380,
+          "median_abs_error_ms": 3.8624459445578303,
+          "coverage_80": 0.7926410703897615,
+          "band_width_ms": 19.25572886067858
+        },
+        "breach": {
+          "samples": 34380,
+          "base_rate": 0.21794648051192553,
+          "brier": 0.0077088163760424535,
+          "auc": 0.9708222883031912,
+          "precision": 0.9911648769879027,
+          "recall": 0.9731749632990792
+        },
+        "alarm_threshold": 0.9799461239149957,
+        "onsets": 25,
+        "warned": 0,
+        "median_lead_s_by_path": {
+          "A": null,
+          "B": null
+        },
+        "false_alarms_per_day": 0.0,
+        "by_episode_by_path": {
+          "A": {
+            "background": {
+              "onsets": 2,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "keys": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "load": {
+              "onsets": 14,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "sudden": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            }
+          },
+          "B": {
+            "background": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "keys": {
+              "onsets": 2,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "load": {
+              "onsets": 4,
+              "warned": 0,
+              "median_lead_s": null
+            }
+          }
+        }
+      },
+      {
+        "horizon_s": 300,
+        "band": {
+          "samples": 34380,
+          "median_abs_error_ms": 3.9183280555233697,
+          "coverage_80": 0.7968004653868528,
+          "band_width_ms": 20.124106301367803
+        },
+        "breach": {
+          "samples": 34380,
+          "base_rate": 0.22952297847585806,
+          "brier": 0.018942704778836063,
+          "auc": 0.9218231573676372,
+          "precision": 0.9911648769879027,
+          "recall": 0.92409073628184
+        },
+        "alarm_threshold": 0.980395091290033,
+        "onsets": 25,
+        "warned": 0,
+        "median_lead_s_by_path": {
+          "A": null,
+          "B": null
+        },
+        "false_alarms_per_day": 0.0,
+        "by_episode_by_path": {
+          "A": {
+            "background": {
+              "onsets": 2,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "keys": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "load": {
+              "onsets": 14,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "sudden": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            }
+          },
+          "B": {
+            "background": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "keys": {
+              "onsets": 2,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "load": {
+              "onsets": 4,
+              "warned": 0,
+              "median_lead_s": null
+            }
+          }
+        }
+      },
+      {
+        "horizon_s": 900,
+        "band": {
+          "samples": 34380,
+          "median_abs_error_ms": 4.013192187941842,
+          "coverage_80": 0.8014834205933682,
+          "band_width_ms": 22.557429550499698
+        },
+        "breach": {
+          "samples": 34380,
+          "base_rate": 0.2475567190226876,
+          "brier": 0.035784625233505424,
+          "auc": 0.8546208064521323,
+          "precision": 0.9911648769879027,
+          "recall": 0.8567735871225473
+        },
+        "alarm_threshold": 0.9823406165818617,
+        "onsets": 25,
+        "warned": 0,
+        "median_lead_s_by_path": {
+          "A": null,
+          "B": null
+        },
+        "false_alarms_per_day": 0.0,
+        "by_episode_by_path": {
+          "A": {
+            "background": {
+              "onsets": 2,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "keys": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "load": {
+              "onsets": 14,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "sudden": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            }
+          },
+          "B": {
+            "background": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "keys": {
+              "onsets": 2,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "load": {
+              "onsets": 4,
+              "warned": 0,
+              "median_lead_s": null
+            }
+          }
+        }
+      }
+    ],
+    "yesterday": [
+      {
+        "horizon_s": 60,
+        "band": {
+          "samples": 34380,
+          "median_abs_error_ms": 6.2590901637773015,
+          "coverage_80": 0.8029086678301338,
+          "band_width_ms": 31.5702229807941
+        },
+        "breach": {
+          "samples": 34380,
+          "base_rate": 0.21794648051192553,
+          "brier": 0.04066405244934856,
+          "auc": 0.909080458332936,
+          "precision": 0.8723220881556267,
+          "recall": 0.9455491792339517
+        },
+        "alarm_threshold": 0.9273277819833459,
+        "onsets": 25,
+        "warned": 7,
+        "median_lead_s_by_path": {
+          "A": 10.0,
+          "B": 20.0
+        },
+        "false_alarms_per_day": 125.5,
+        "by_episode_by_path": {
+          "A": {
+            "background": {
+              "onsets": 2,
+              "warned": 1,
+              "median_lead_s": 10.0
+            },
+            "keys": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "load": {
+              "onsets": 14,
+              "warned": 3,
+              "median_lead_s": 10.0
+            },
+            "sudden": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            }
+          },
+          "B": {
+            "background": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "keys": {
+              "onsets": 2,
+              "warned": 1,
+              "median_lead_s": 10.0
+            },
+            "load": {
+              "onsets": 4,
+              "warned": 2,
+              "median_lead_s": 25.0
+            }
+          }
+        }
+      },
+      {
+        "horizon_s": 300,
+        "band": {
+          "samples": 34380,
+          "median_abs_error_ms": 6.2513707898654705,
+          "coverage_80": 0.8028795811518324,
+          "band_width_ms": 31.565062481199163
+        },
+        "breach": {
+          "samples": 34380,
+          "base_rate": 0.22952297847585806,
+          "brier": 0.04710677402685536,
+          "auc": 0.8772265233593279,
+          "precision": 0.883772469835016,
+          "recall": 0.9096438981117729
+        },
+        "alarm_threshold": 0.9309235427706283,
+        "onsets": 25,
+        "warned": 9,
+        "median_lead_s_by_path": {
+          "A": 45.0,
+          "B": 50.0
+        },
+        "false_alarms_per_day": 110.0,
+        "by_episode_by_path": {
+          "A": {
+            "background": {
+              "onsets": 2,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "keys": {
+              "onsets": 1,
+              "warned": 1,
+              "median_lead_s": 10.0
+            },
+            "load": {
+              "onsets": 14,
+              "warned": 5,
+              "median_lead_s": 80.0
+            },
+            "sudden": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            }
+          },
+          "B": {
+            "background": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "keys": {
+              "onsets": 2,
+              "warned": 2,
+              "median_lead_s": 115.0
+            },
+            "load": {
+              "onsets": 4,
+              "warned": 1,
+              "median_lead_s": 50.0
+            }
+          }
+        }
+      },
+      {
+        "horizon_s": 900,
+        "band": {
+          "samples": 34380,
+          "median_abs_error_ms": 6.246621415040021,
+          "coverage_80": 0.8028504944735311,
+          "band_width_ms": 31.559365597635015
+        },
+        "breach": {
+          "samples": 34380,
+          "base_rate": 0.2475567190226876,
+          "brier": 0.05840738685968224,
+          "auc": 0.8294310834013838,
+          "precision": 0.897931543954691,
+          "recall": 0.8568910821290096
+        },
+        "alarm_threshold": 0.9350870552611659,
+        "onsets": 25,
+        "warned": 13,
+        "median_lead_s_by_path": {
+          "A": 310.0,
+          "B": 520.0
+        },
+        "false_alarms_per_day": 95.5,
+        "by_episode_by_path": {
+          "A": {
+            "background": {
+              "onsets": 2,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "keys": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "load": {
+              "onsets": 14,
+              "warned": 7,
+              "median_lead_s": 310.0
+            },
+            "sudden": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            }
+          },
+          "B": {
+            "background": {
+              "onsets": 1,
+              "warned": 0,
+              "median_lead_s": null
+            },
+            "keys": {
+              "onsets": 2,
+              "warned": 2,
+              "median_lead_s": 585.0
+            },
+            "load": {
+              "onsets": 4,
+              "warned": 4,
+              "median_lead_s": 520.0
+            }
+          }
+        }
+      }
+    ]
+  }
+}

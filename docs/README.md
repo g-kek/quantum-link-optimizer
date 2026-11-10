@@ -5,9 +5,11 @@
 | [Запуск](guide/quickstart.md) | HTML, собственный CSV, воспроизведение опытов |
 | [Разбор RTT](guide/diagnosis.md) | Составляющие задержки, участки и причины |
 | [Результаты прогноза](research/forecast-benefit.md) | MLP, LSTM и сравнение с EWMA |
+| [Прогноз задержки](research/forecast.md) | Диапазон RTT и вероятность превышения на минуты вперёд |
 | [Независимые испытания](validation/independent-trials.md) | Доставка, overhead, очереди и ограничения |
 | [Окно команд](validation/pipelining.md) | Одна и восемь команд в полёте |
 | [Точность диагностики](validation/diagnostics.md) | Найденные инциденты, место и ложные срабатывания |
+| [Постепенные изменения](validation/routing.md) | EWMA, last, копии по риску на ramp и periodic |
 | [Приёмка #1–5](validation/acceptance.md) | Сетевые сценарии и диагностика |
 | [Linux-стенд](lab/network.md) | Namespaces, netem, PCAP |
 | [Команды и KMS](lab/commands-and-keys.md) | Защита, ключи, ACK и dedup |
