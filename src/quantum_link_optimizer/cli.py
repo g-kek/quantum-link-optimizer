@@ -215,6 +215,27 @@ def main() -> None:
     audit.add_argument("--output", type=Path, default=Path("artifacts/ping-audit"))
     audit.add_argument("--sla-ms", type=float, default=100.0)
     audit.add_argument("--max-gap-seconds", type=float, default=2.0)
+    diagnose = commands.add_parser(
+        "diagnose", help="Split ping RTT into base, queue, size and probe effects"
+    )
+    diagnose.add_argument("--input", type=Path, required=True)
+    diagnose.add_argument("--output", type=Path, default=Path("artifacts/diagnosis"))
+    diagnose.add_argument("--target-ms", type=float, default=100.0)
+    diagnose.add_argument("--distance-km", type=float, default=None)
+    diagnose.add_argument(
+        "--targets", default=None, help="Comma-separated targets from near to far"
+    )
+    examples = commands.add_parser(
+        "diagnose-examples", help="Diagnose synthetic sets with a known cause"
+    )
+    examples.add_argument(
+        "--output", type=Path, default=Path("artifacts/diagnosis-examples")
+    )
+    breakdown = commands.add_parser(
+        "breakdown", help="Split command latency of a laboratory trial into stages"
+    )
+    breakdown.add_argument("--run", type=Path, required=True)
+    breakdown.add_argument("--output", type=Path, default=None)
     demo = commands.add_parser("demo", help="Build a standalone synthetic MVP report")
     demo.add_argument("--output", type=Path, default=Path("artifacts/demo"))
     demo.add_argument("--samples", type=int, default=4000)
@@ -241,6 +262,36 @@ def main() -> None:
             print(
                 json.dumps({k: v for k, v in report.items() if k != "points"}, indent=2)
             )
+        elif args.command == "diagnose":
+            from quantum_link_optimizer.analysis.run import diagnose_csv
+
+            order = args.targets.split(",") if args.targets else None
+            report = diagnose_csv(
+                args.input,
+                args.output,
+                target_ms=args.target_ms,
+                distance_km=args.distance_km,
+                order=order,
+            )
+            verdict = report["diagnosis"]["verdict"]
+            print(f"{verdict['title']}: {args.output / 'index.html'}")
+        elif args.command == "diagnose-examples":
+            from quantum_link_optimizer.analysis.run import run_examples
+
+            summary = run_examples(args.output)
+            print(
+                f"Matched {summary['matched']}/{summary['total']}: "
+                f"{args.output / 'index.html'}"
+            )
+        elif args.command == "breakdown":
+            from quantum_link_optimizer.analysis.run import breakdown_trial
+
+            result = breakdown_trial(args.run, args.output or args.run / "breakdown")
+
+            for part in result["tail"]["stages"]:
+                print(f"{part['label']:<24} {part['mean_ms']:8.1f} ms")
+
+            print(f"Tail p95 {result['p95_ms']:.1f} ms: {result['largest_tail_stage']}")
         elif args.command == "generate":
             write_telemetry(args.output, generate_telemetry(args.samples, args.seed))
             print(f"Synthetic telemetry: {args.output}")
