@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "scope": "Same frozen model and final seeds 1009/1013, only max_in_flight differs; laboratory loopback",
+  "final_seeds": [
+    1009,
+    1013
+  ],
+  "runs": {
+    "max_in_flight_1": {
+      "report_sha256": "2b72d3684577af25d0e52491bae631d982a599b83bb4805a4da30170d0a37dd4",
+      "model_sha256": "2182f6b2eadbb1daa50ec1ee1e6aeb5e2362dbb656e8a5df45a943010d5ebd3d",
+      "policy_totals": {
+        "fixed-a": {
+          "offered": 352,
+          "timely_executed": 101,
+          "unknown_outcomes": 104,
+          "extra_path_bytes": 0
+        },
+        "fixed-b": {
+          "offered": 352,
+          "timely_executed": 24,
+          "unknown_outcomes": 114,
+          "extra_path_bytes": 0
+        },
+        "ewma": {
+          "offered": 352,
+          "timely_executed": 126,
+          "unknown_outcomes": 104,
+          "extra_path_bytes": 0
+        },
+        "forecast": {
+          "offered": 352,
+          "timely_executed": 128,
+          "unknown_outcomes": 108,
+          "extra_path_bytes": 0
+        },
+        "ewma-copies": {
+          "offered": 352,
+          "timely_executed": 136,
+          "unknown_outcomes": 101,
+          "extra_path_bytes": 65052
+        },
+        "ewma-paced": {
+          "offered": 352,
+          "timely_executed": 127,
+          "unknown_outcomes": 106,
+          "extra_path_bytes": 0
+        }
+      },
+      "timely_by_case": {
+        "normal": {
+          "fixed-a": 44,
+          "fixed-b": 1,
+          "ewma": 44,
+          "forecast": 44,
+          "ewma-copies": 42,
+          "ewma-paced": 44
+        },
+        "swap": {
+          "fixed-a": 2,
+          "fixed-b": 22,
+          "ewma": 27,
+          "forecast": 29,
+          "ewma-copies": 41,
+          "ewma-paced": 28
+        },
+        "common-700": {
+          "fixed-a": 0,
+          "fixed-b": 0,
+          "ewma": 0,
+          "forecast": 0,
+          "ewma-copies": 0,
+          "ewma-paced": 0
+        },
+        "slow-kms": {
+          "fixed-a": 0,
+          "fixed-b": 0,
+          "ewma": 0,
+          "forecast": 0,
+          "ewma-copies": 0,
+          "ewma-paced": 0
+        },
+        "key-exhaustion": {
+          "fixed-a": 6,
+          "fixed-b": 1,
+          "ewma": 6,
+          "forecast": 6,
+          "ewma-copies": 4,
+          "ewma-paced": 6
+        },
+        "shared-queue": {
+          "fixed-a": 0,
+          "fixed-b": 0,
+          "ewma": 0,
+          "forecast": 0,
+          "ewma-copies": 0,
+          "ewma-paced": 0
+        },
+        "receiver-restart": {
+          "fixed-a": 44,
+          "fixed-b": 0,
+          "ewma": 44,
+          "forecast": 44,
+          "ewma-copies": 44,
+          "ewma-paced": 44
+        },
+        "loss-a": {
+          "fixed-a": 5,
+          "fixed-b": 0,
+          "ewma": 5,
+          "forecast": 5,
+          "ewma-copies": 5,
+          "ewma-paced": 5
+        }
+      },
+      "paired_forecast_vs_ewma": {
+        "paired_episodes": 16,
+        "mean_difference": 0.005681818181818184,
+        "interval_95": [
+          0.0,
+          0.01704545454545455
+        ],
+        "scope": "Descriptive episode bootstrap; repeated scenario families are not a field-network population"
+      }
+    },
+    "max_in_flight_8": {
+      "report_sha256": "ec7ec0228c9da207cce75191e0ec31008feedf2890be9ecd815d30d372d0c17c",
+      "model_sha256": "2182f6b2eadbb1daa50ec1ee1e6aeb5e2362dbb656e8a5df45a943010d5ebd3d",
+      "policy_totals": {
+        "fixed-a": {
+          "offered": 352,
+          "timely_executed": 151,
+          "unknown_outcomes": 74,
+          "extra_path_bytes": 0
+        },
+        "fixed-b": {
+          "offered": 352,
+          "timely_executed": 127,
+          "unknown_outcomes": 68,
+          "extra_path_bytes": 0
+        },
+        "ewma": {
+          "offered": 352,
+          "timely_executed": 167,
+          "unknown_outcomes": 64,
+          "extra_path_bytes": 0
+        },
+        "forecast": {
+          "offered": 352,
+          "timely_executed": 167,
+          "unknown_outcomes": 64,
+          "extra_path_bytes": 0
+        },
+        "ewma-copies": {
+          "offered": 352,
+          "timely_executed": 166,
+          "unknown_outcomes": 69,
+          "extra_path_bytes": 77000
+        },
+        "ewma-paced": {
+          "offered": 352,
+          "timely_executed": 167,
+          "unknown_outcomes": 64,
+          "extra_path_bytes": 0
+        }
+      },
+      "timely_by_case": {
+        "normal": {
+          "fixed-a": 44,
+          "fixed-b": 36,
+          "ewma": 44,
+          "forecast": 44,
+          "ewma-copies": 44,
+          "ewma-paced": 44
+        },
+        "swap": {
+          "fixed-a": 22,
+          "fixed-b": 22,
+          "ewma": 38,
+          "forecast": 38,
+          "ewma-copies": 42,
+          "ewma-paced": 38
+        },
+        "common-700": {
+          "fixed-a": 0,
+          "fixed-b": 0,
+          "ewma": 0,
+          "forecast": 0,
+          "ewma-copies": 0,
+          "ewma-paced": 0
+        },
+        "slow-kms": {
+          "fixed-a": 0,
+          "fixed-b": 0,
+          "ewma": 0,
+          "forecast": 0,
+          "ewma-copies": 0,
+          "ewma-paced": 0
+        },
+        "key-exhaustion": {
+          "fixed-a": 6,
+          "fixed-b": 2,
+          "ewma": 6,
+          "forecast": 6,
+          "ewma-copies": 4,
+          "ewma-paced": 6
+        },
+        "shared-queue": {
+          "fixed-a": 0,
+          "fixed-b": 0,
+          "ewma": 0,
+          "forecast": 0,
+          "ewma-copies": 0,
+          "ewma-paced": 0
+        },
+        "receiver-restart": {
+          "fixed-a": 44,
+          "fixed-b": 37,
+          "ewma": 44,
+          "forecast": 44,
+          "ewma-copies": 44,
+          "ewma-paced": 44
+        },
+        "loss-a": {
+          "fixed-a": 35,
+          "fixed-b": 30,
+          "ewma": 35,
+          "forecast": 35,
+          "ewma-copies": 32,
+          "ewma-paced": 35
+        }
+      },
+      "paired_forecast_vs_ewma": {
+        "paired_episodes": 16,
+        "mean_difference": 0.0,
+        "interval_95": [
+          0.0,
+          0.0
+        ],
+        "scope": "Descriptive episode bootstrap; repeated scenario families are not a field-network population"
+      }
+    }
+  },
+  "limitations": [
+    "Performance benchmarks of these runs shared the host with other jobs and are not reported",
+    "Model trained on development runs with one command in flight, not retrained",
+    "ewma-paced uses 20 commands/s with a 20 ms refusal limit instead of 5 commands/s"
+  ]
+}

@@ -5,6 +5,7 @@
 | [Запуск](guide/quickstart.md) | HTML, собственный CSV, воспроизведение опытов |
 | [Результаты прогноза](research/forecast-benefit.md) | MLP, LSTM и сравнение с EWMA |
 | [Независимые испытания](validation/independent-trials.md) | Доставка, overhead, очереди и ограничения |
+| [Окно команд](validation/pipelining.md) | Одна и восемь команд в полёте |
 | [Приёмка #1–5](validation/acceptance.md) | Сетевые сценарии и диагностика |
 | [Linux-стенд](lab/network.md) | Namespaces, netem, PCAP |
 | [Команды и KMS](lab/commands-and-keys.md) | Защита, ключи, ACK и dedup |
