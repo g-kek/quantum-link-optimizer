@@ -285,6 +285,7 @@ class Sender(asyncio.DatagramProtocol):
         return {"status": "no_ack", "phase": phase, "outcome": "unknown"}
 
     async def close(self):
+        self.session.close()
         self.transport.close()
         self.worker.cancel()
         await asyncio.gather(self.worker, return_exceptions=True)

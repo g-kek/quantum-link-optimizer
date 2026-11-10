@@ -42,6 +42,7 @@ async def open_path(
             path,
             rotate_after=config["rotate_after"],
             session_id=logical_session,
+            prefetch=config.get("prefetch_keys", True),
         ),
         proxy.get_extra_info("sockname"),
         sender_log,
