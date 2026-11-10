@@ -90,6 +90,7 @@ def rank(anomalous, healthy, shared_segment=False):
                 "title": title,
                 "score": round(explained - 0.5 * contradicted, 3),
                 "explains": sorted(dependents & anomalous),
+                "dependents": sorted(dependents),
                 "contradicted_by": sorted(dependents & healthy),
             }
         )
@@ -100,6 +101,10 @@ def rank(anomalous, healthy, shared_segment=False):
 def localize(findings, healthy=(), shared_segment=False):
     """Attach the most likely component to every finding with an observable."""
     anomalous = {name for finding in findings for name in observable(finding)}
+
+    # A backlog at the sender follows any slow path, it does not point at it
+    if any(name.startswith("path:") for name in anomalous):
+        anomalous.discard("sender_queue")
 
     if not anomalous:
         return findings
@@ -115,6 +120,15 @@ def localize(findings, healthy=(), shared_segment=False):
 
         best = candidates[0]["score"]
         tied = [item for item in candidates if best - item["score"] < 0.1]
+        declared = [
+            item for item in tied if item["component"] != "shared" or shared_segment
+        ]
+        narrowest = min((len(item["dependents"]) for item in declared), default=0)
+        specific = [item for item in declared if len(item["dependents"]) == narrowest]
+
+        # The narrowest known component that explains everything wins a tie
+        if len(tied) > 1 and len(specific) == 1:
+            tied = specific
         finding["location"] = {
             "component": tied[0]["component"] if len(tied) == 1 else None,
             "title": " или ".join(item["title"] for item in tied),
@@ -140,5 +154,10 @@ def healthy_observables(snapshot, max_age_ms, findings):
 
         if key_age is not None and 0 <= key_age <= max_age_ms:
             healthy.add(f"keys:{path}")
+
+        receiver_age = row.get("receiver_observation_age_ms")
+
+        if receiver_age is not None and 0 <= receiver_age <= max_age_ms:
+            healthy.add("receiver_spans")
 
     return healthy - {name for f in findings for name in observable(f)}

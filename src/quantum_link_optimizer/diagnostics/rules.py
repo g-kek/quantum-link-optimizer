@@ -59,7 +59,8 @@ def assess(
             }
         )
 
-    if local_queue_depth or admission_rejections:
+    # With several commands in flight one queued command is routine
+    if local_queue_depth >= 2 or admission_rejections:
         add(
             "local_overload",
             "sender",
@@ -103,6 +104,14 @@ def assess(
                 )
                 evidence.append("repeated_timeouts")
 
+            loss = row.get("timeout_fraction")
+
+            if loss is not None and loss >= 0.15 and row.get("history_count", 0) >= 6:
+                measures.append(
+                    measurement("timeout_fraction", loss, "fraction", age, path)
+                )
+                evidence.append("loss_high")
+
         device_age = row.get("device_observation_age_ms")
 
         if fresh(device_age):
@@ -126,7 +135,7 @@ def assess(
 
         queue_age = row.get("sender_queue_observation_age_ms")
 
-        if row.get("sender_queue_depth") and fresh(queue_age):
+        if (row.get("sender_queue_depth") or 0) >= 2 and fresh(queue_age):
             add(
                 "local_overload",
                 path,

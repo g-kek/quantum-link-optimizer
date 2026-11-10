@@ -32,7 +32,7 @@ EXPECTED = {
 # Symptoms that follow from the main fault and are not false alarms
 CONSEQUENCES = {
     "common-700": {"sender_overload"},
-    "shared-queue": {"sender_overload"},
+    "shared-queue": {"sender_overload", "route_change"},
     "slow-kms": {"sender_overload", "receiver_slow"},
     "key-exhaustion": {"sender_overload", "key_delivery_delay"},
     "swap": {"route_change"},
