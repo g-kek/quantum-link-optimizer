@@ -69,9 +69,13 @@ uv run python -m quantum_link_optimizer.experiments.demo.build \
 ```bash
 uv run quantum-link demo --output artifacts/demo
 uv run quantum-link audit --input data/ping.csv --output artifacts/ping-audit
+uv run quantum-link diagnose --input data/ping.csv --output artifacts/diagnosis
+uv run quantum-link diagnose-examples --output artifacts/diagnosis-examples
 ```
 
 `demo` создаёт синтетический RTT-ряд, `audit` анализирует собственный CSV
+`diagnose` раскладывает RTT на базовую часть, очередь, размер пакета и ICMP
+и называет вероятную причину, [подробнее](docs/guide/diagnosis.md)
 Формат CSV и команды стенда — в [инструкции](docs/guide/quickstart.md)
 
 ## Документация и код

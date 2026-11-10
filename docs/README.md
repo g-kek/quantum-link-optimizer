@@ -3,6 +3,7 @@
 | Раздел | Содержание |
 | --- | --- |
 | [Запуск](guide/quickstart.md) | HTML, собственный CSV, воспроизведение опытов |
+| [Разбор RTT](guide/diagnosis.md) | Составляющие задержки, участки и причины |
 | [Результаты прогноза](research/forecast-benefit.md) | MLP, LSTM и сравнение с EWMA |
 | [Независимые испытания](validation/independent-trials.md) | Доставка, overhead, очереди и ограничения |
 | [Окно команд](validation/pipelining.md) | Одна и восемь команд в полёте |

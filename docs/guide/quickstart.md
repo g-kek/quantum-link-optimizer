@@ -81,6 +81,7 @@ uv run quantum-link audit --input data/ping.csv \
 
 `audit` сравнивает fixed, previous RTT и EWMA без обучения модели
 Покрытие и неизвестные исходы нужно читать вместе с RTT-квантилями
+Причины задержки по тому же CSV ищет [`diagnose`](diagnosis.md)
 
 ## Файлы отчёта
 
