@@ -12,20 +12,29 @@ Python 3.12 или 3.13, обучение на CPU
 ## Отчёт по командам
 
 Порядок: [development](../research/forecast-benefit.md) →
-[независимые испытания](../validation/independent-trials.md) → HTML
+[независимые испытания](../validation/independent-trials.md) →
+[точность диагностики](../validation/diagnostics.md) → HTML
 
 ```bash
 uv run python -m quantum_link_optimizer.experiments.demo.build \
   --development artifacts/experiments/forecast-benefit-01 \
   --validation artifacts/experiments/independent-trials-01 \
+  --diagnostics artifacts/experiments/diagnostics-heldout-01/diagnostics-report.json \
   --output artifacts/experiments/operator-demo
 ```
+
+Вместо `independent-trials` подойдёт любой прогон того же формата,
+например [восемь команд в полёте](../validation/pipelining.md)
 
 - Сборщик проверяет хеши данных, модель и policy lock
 - Каталог вывода должен быть новым
 - Откройте `index.html` как локальный файл
 - Выберите сценарий, seed и политику
 - Ползунок раскрывает события, общая таблица относится ко всему эпизоду
+- Карточки инцидентов показывают класс, путь, схему с подсвеченным компонентом,
+  время, основания с возрастом, альтернативы и действие на момент ползунка
+- Под ними — этапы задержки каждой команды и состав хвоста от p95
+- `--diagnostics` добавляет сверху точность диагностики по отложенным seeds
 - Внесённые воздействия показаны отдельно от наблюдений контроллера
 - JSON можно скачать из отчёта
 

@@ -67,9 +67,13 @@ uv run python -m quantum_link_optimizer.experiments.validation.run \
   --development artifacts/experiments/forecast-benefit-01 \
   --plan lab/experiments/independent-trials.json \
   --output artifacts/experiments/independent-trials-01
+uv run python -m quantum_link_optimizer.experiments.diagnostics.run \
+  --plan lab/experiments/diagnostics-heldout.json \
+  --output artifacts/experiments/diagnostics-heldout-01
 uv run python -m quantum_link_optimizer.experiments.demo.build \
   --development artifacts/experiments/forecast-benefit-01 \
   --validation artifacts/experiments/independent-trials-01 \
+  --diagnostics artifacts/experiments/diagnostics-heldout-01/diagnostics-report.json \
   --output artifacts/experiments/operator-demo
 ```
 
@@ -77,7 +81,8 @@ uv run python -m quantum_link_optimizer.experiments.demo.build \
 Откройте `artifacts/experiments/operator-demo/index.html` в браузере
 Готовый HTML работает без сервера и подключения к сети
 
-В отчёте — RTT, исходы команд, очередь, ключи, решения и сравнение политик
+В отчёте — RTT, исходы команд, карточки инцидентов со схемой и местом,
+этапы задержки каждой команды, точность диагностики и сравнение политик
 Данные и веса сохраняются в `artifacts/`, в Git входят численные сводки
 
 ## Другие режимы
