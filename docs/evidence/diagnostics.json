@@ -1,0 +1,338 @@
+{
+  "schema_version": 1,
+  "scope": "Laboratory scenarios with declared faults, EWMA routing, 8 commands in flight",
+  "old_rules": {
+    "seeds": [
+      1009,
+      1013
+    ],
+    "source": "pipelining-01 journals rescored",
+    "summary": {
+      "trials": 16,
+      "expected_incidents": 14,
+      "detected": 13,
+      "detection_rate": 0.9285714285714286,
+      "location_checked": 11,
+      "location_correct": 0,
+      "time_to_detect_ms_median": 50.377958,
+      "time_to_detect_ms_p90": 224.9663334,
+      "false_alarms": 50,
+      "false_alarms_per_trial": 3.125,
+      "telemetry_alarms": 20,
+      "by_case": {
+        "common-700": {
+          "trials": 2,
+          "detected": 2,
+          "expected": 2,
+          "false_alarms": 2,
+          "false_alarm_classes": {
+            "receiver_slow": 2
+          }
+        },
+        "key-exhaustion": {
+          "trials": 2,
+          "detected": 2,
+          "expected": 2,
+          "false_alarms": 1,
+          "false_alarm_classes": {
+            "receiver_slow": 1
+          }
+        },
+        "loss-a": {
+          "trials": 2,
+          "detected": 1,
+          "expected": 2,
+          "false_alarms": 13,
+          "false_alarm_classes": {
+            "receiver_slow": 13
+          }
+        },
+        "normal": {
+          "trials": 2,
+          "detected": 0,
+          "expected": 0,
+          "false_alarms": 13,
+          "false_alarm_classes": {
+            "receiver_slow": 13
+          }
+        },
+        "receiver-restart": {
+          "trials": 2,
+          "detected": 0,
+          "expected": 0,
+          "false_alarms": 8,
+          "false_alarm_classes": {
+            "receiver_slow": 8
+          }
+        },
+        "shared-queue": {
+          "trials": 2,
+          "detected": 2,
+          "expected": 2,
+          "false_alarms": 2,
+          "false_alarm_classes": {
+            "receiver_slow": 2
+          }
+        },
+        "slow-kms": {
+          "trials": 2,
+          "detected": 2,
+          "expected": 2,
+          "false_alarms": 0,
+          "false_alarm_classes": {}
+        },
+        "swap": {
+          "trials": 2,
+          "detected": 4,
+          "expected": 4,
+          "false_alarms": 11,
+          "false_alarm_classes": {
+            "receiver_slow": 11
+          }
+        }
+      },
+      "opened_by_expected_class": {
+        "path_degradation": {
+          "path_degradation": 7,
+          "sender_overload": 4,
+          "telemetry_gap": 8,
+          "receiver_slow": 7
+        },
+        "key_exhaustion": {
+          "key_delivery_delay": 2,
+          "key_exhaustion": 2,
+          "sender_overload": 2,
+          "telemetry_gap": 2,
+          "receiver_slow": 1
+        },
+        "none": {
+          "receiver_slow": 4,
+          "telemetry_gap": 4
+        },
+        "key_delivery_delay": {
+          "key_delivery_delay": 2,
+          "receiver_slow": 2,
+          "telemetry_gap": 2
+        }
+      }
+    }
+  },
+  "new_rules_development": {
+    "seeds": [
+      1009,
+      1013,
+      3001,
+      3011
+    ],
+    "report_sha256": "760b93c9d2f64458af0faccb930ac225503109a3d5728f150404259c3f0a9d96",
+    "note": "Seeds used while tuning the rules",
+    "summary": {
+      "trials": 32,
+      "expected_incidents": 28,
+      "detected": 27,
+      "detection_rate": 0.9642857142857143,
+      "location_checked": 23,
+      "location_correct": 23,
+      "time_to_detect_ms_median": 50.292625,
+      "time_to_detect_ms_p90": 692.3395666000022,
+      "false_alarms": 6,
+      "false_alarms_per_trial": 0.1875,
+      "telemetry_alarms": 8,
+      "by_case": {
+        "common-700": {
+          "trials": 4,
+          "detected": 4,
+          "expected": 4,
+          "false_alarms": 0,
+          "false_alarm_classes": {}
+        },
+        "key-exhaustion": {
+          "trials": 4,
+          "detected": 4,
+          "expected": 4,
+          "false_alarms": 0,
+          "false_alarm_classes": {}
+        },
+        "loss-a": {
+          "trials": 4,
+          "detected": 3,
+          "expected": 4,
+          "false_alarms": 3,
+          "false_alarm_classes": {
+            "path_degradation": 3
+          }
+        },
+        "normal": {
+          "trials": 4,
+          "detected": 0,
+          "expected": 0,
+          "false_alarms": 1,
+          "false_alarm_classes": {
+            "route_change": 1
+          }
+        },
+        "receiver-restart": {
+          "trials": 4,
+          "detected": 0,
+          "expected": 0,
+          "false_alarms": 0,
+          "false_alarm_classes": {}
+        },
+        "shared-queue": {
+          "trials": 4,
+          "detected": 4,
+          "expected": 4,
+          "false_alarms": 0,
+          "false_alarm_classes": {}
+        },
+        "slow-kms": {
+          "trials": 4,
+          "detected": 4,
+          "expected": 4,
+          "false_alarms": 0,
+          "false_alarm_classes": {}
+        },
+        "swap": {
+          "trials": 4,
+          "detected": 8,
+          "expected": 8,
+          "false_alarms": 2,
+          "false_alarm_classes": {
+            "key_delivery_delay": 2
+          }
+        }
+      },
+      "opened_by_expected_class": {
+        "none": {
+          "route_change": 1,
+          "none": 7
+        },
+        "path_degradation": {
+          "key_delivery_delay": 1,
+          "path_degradation": 15,
+          "route_change": 8,
+          "sender_overload": 8,
+          "none": 1
+        },
+        "key_delivery_delay": {
+          "key_delivery_delay": 4,
+          "receiver_slow": 4
+        },
+        "key_exhaustion": {
+          "key_delivery_delay": 4,
+          "key_exhaustion": 4,
+          "sender_overload": 4,
+          "telemetry_gap": 4
+        }
+      }
+    }
+  },
+  "new_rules_heldout": {
+    "seeds": [
+      4001,
+      4003,
+      4007,
+      4013
+    ],
+    "report_sha256": "aff8639ba48dd7ef2ae7dbe70993bd1bcd22a71e62ce599d54dd3181f41b9b71",
+    "note": "Seeds reserved before tuning finished, not used to change rules",
+    "summary": {
+      "trials": 32,
+      "expected_incidents": 28,
+      "detected": 27,
+      "detection_rate": 0.9642857142857143,
+      "location_checked": 23,
+      "location_correct": 23,
+      "time_to_detect_ms_median": 49.145042,
+      "time_to_detect_ms_p90": 677.167992000002,
+      "false_alarms": 6,
+      "false_alarms_per_trial": 0.1875,
+      "telemetry_alarms": 8,
+      "by_case": {
+        "common-700": {
+          "trials": 4,
+          "detected": 4,
+          "expected": 4,
+          "false_alarms": 0,
+          "false_alarm_classes": {}
+        },
+        "key-exhaustion": {
+          "trials": 4,
+          "detected": 4,
+          "expected": 4,
+          "false_alarms": 0,
+          "false_alarm_classes": {}
+        },
+        "loss-a": {
+          "trials": 4,
+          "detected": 3,
+          "expected": 4,
+          "false_alarms": 4,
+          "false_alarm_classes": {
+            "path_degradation": 4
+          }
+        },
+        "normal": {
+          "trials": 4,
+          "detected": 0,
+          "expected": 0,
+          "false_alarms": 0,
+          "false_alarm_classes": {}
+        },
+        "receiver-restart": {
+          "trials": 4,
+          "detected": 0,
+          "expected": 0,
+          "false_alarms": 2,
+          "false_alarm_classes": {
+            "route_change": 2
+          }
+        },
+        "shared-queue": {
+          "trials": 4,
+          "detected": 4,
+          "expected": 4,
+          "false_alarms": 0,
+          "false_alarm_classes": {}
+        },
+        "slow-kms": {
+          "trials": 4,
+          "detected": 4,
+          "expected": 4,
+          "false_alarms": 0,
+          "false_alarm_classes": {}
+        },
+        "swap": {
+          "trials": 4,
+          "detected": 8,
+          "expected": 8,
+          "false_alarms": 0,
+          "false_alarm_classes": {}
+        }
+      },
+      "opened_by_expected_class": {
+        "none": {
+          "none": 6,
+          "path_degradation": 1,
+          "route_change": 2
+        },
+        "path_degradation": {
+          "path_degradation": 16,
+          "route_change": 8,
+          "sender_overload": 8
+        },
+        "key_delivery_delay": {
+          "key_delivery_delay": 4,
+          "path_degradation": 1,
+          "receiver_slow": 4
+        },
+        "key_exhaustion": {
+          "key_delivery_delay": 4,
+          "key_exhaustion": 4,
+          "sender_overload": 4,
+          "telemetry_gap": 4
+        }
+      }
+    }
+  }
+}
